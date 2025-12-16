@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logística App v3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-200 p-4">
+
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+        <div class="bg-blue-800 p-4 text-center">
+            <h1 class="text-white text-xl font-bold">🚛 Controle de Saída</h1>
+            <p class="text-blue-200 text-sm">Versão Final</p>
+        </div>
+
+        <div class="p-6 space-y-5">
+            <div>
+                <label class="font-bold text-gray-700">Placa do Veículo</label>
+                <input type="text" id="placa" class="w-full mt-1 p-3 border-2 border-gray-300 rounded-lg uppercase text-lg" placeholder="ABC-1234">
+            </div>
+
+            <div>
+                <label class="font-bold text-gray-700">Motorista</label>
+                <input type="text" id="motorista" class="w-full mt-1 p-3 border-2 border-gray-300 rounded-lg" placeholder="Nome Completo">
+            </div>
+
+            <div>
+                <label class="font-bold text-gray-700">Estado dos Pneus</label>
+                <select id="pneu_ok" class="w-full mt-1 p-3 border-2 border-gray-300 rounded-lg bg-white">
+                    <option value="true">✅ OK - Em bom estado</option>
+                    <option value="false">❌ RUIM - Pneu careca/furo</option>
+                </select>
+            </div>
+
+            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <label class="font-bold text-gray-700 block mb-2">📸 Foto Obrigatória</label>
+                <input type="file" id="foto" accept="image/*" capture="environment" class="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700">
+            </div>
+
+            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg text-lg shadow-md transition transform active:scale-95">
+                📍 ENVIAR REGISTRO
+            </button>
+            <p id="status" class="text-center text-sm font-bold text-gray-500 mt-2">Pronto para enviar</p>
+        </div>
+    </div>
+
+    <script>
+        const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
+        const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
+
+        // CORREÇÃO: Usando 'window.supabase' e nomeando a variável como 'meuSupabase'
+        const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+
+        async function enviarDados() {
+            const btn = document.getElementById('btnEnviar');
+            const status = document.getElementById('status');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            status.innerText = "🔄 Iniciando GPS...";
+
+            const opcoesGPS = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    status.innerText = "📍 GPS OK! Enviando foto...";
+                    const placa = document.getElementById('placa').value.toUpperCase();
+                    const motorista = document.getElementById('motorista').value;
+                    const pneuOk = document.getElementById('pneu_ok').value === 'true';
+                    const arquivoFoto = document.getElementById('foto').files[0];
+
+                    if (!placa || !motorista) throw new Error("Preencha Placa e Motorista!");
+                    if (!arquivoFoto) throw new Error("A foto é obrigatória!");
+
+                    const nomeArquivo = Date.now() + '_' + Math.random().toString(36).substring(7) + '.jpg';
+                    
+                    // CORREÇÃO: Usando meuSupabase
+                    const { error: erroUpload } = await meuSupabase.storage.from('evidencias').upload(nomeArquivo, arquivoFoto);
+                    if (erroUpload) throw erroUpload;
+
+                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeArquivo}`;
+                    status.innerText = "💾 Salvando no banco...";
+
+                    // CORREÇÃO: Usando meuSupabase
+                    const { error: erroBanco } = await meuSupabase.from('checklists').insert({
+                        placa: placa,
+                        motorista: motorista,
+                        pneu_ok: pneuOk,
+                        foto_url: fotoUrl,
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    });
+
+                    if (erroBanco) throw erroBanco;
+                    alert("✅ SUCESSO! Dados enviados.");
+                    window.location.reload();
+
+                } catch (erro) {
+                    alert("❌ Erro: " + erro.message);
+                    status.innerText = "Tente novamente.";
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                }
+            }, (erro) => {
+                alert("⚠️ Erro de GPS: " + erro.message);
+                status.innerText = "Sem GPS";
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }, opcoesGPS);
+        }
+    </script>
+</body>
+</html>
