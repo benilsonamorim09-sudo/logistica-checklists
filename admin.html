@@ -3,40 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin v11</title>
+    <title>Dashboard Logística v12</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js (Biblioteca de Gráficos) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen">
 
+    <!-- MENU -->
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
-                <h1 class="font-bold text-lg tracking-wide">LOGÍSTICA <span class="text-slate-400">CONTROL</span></h1>
+                <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-slate-400">BI</span></h1>
             </div>
             
-            <div class="flex bg-slate-800 rounded p-1 w-full md:w-auto">
-                <input id="busca" placeholder="Buscar Placa..." class="bg-transparent text-white px-2 outline-none uppercase w-full">
-                <button onclick="carregarDados()" class="px-3 text-blue-400"><i class="fas fa-search"></i></button>
-            </div>
-
-            <div class="flex gap-2 text-sm w-full md:w-auto justify-center">
+            <div class="flex gap-2 text-sm">
                 <button onclick="abrir('modalFrota', loadFrota)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-truck"></i> Frota</button>
                 <button onclick="abrir('modalEquipe', loadEquipe)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-users"></i> Equipe</button>
-                <button onclick="carregarDados()" class="bg-green-700 px-3 py-1 rounded hover:bg-green-600"><i class="fas fa-sync"></i></button>
+                <button onclick="carregarDados()" class="bg-green-600 px-3 py-1 rounded hover:bg-green-500"><i class="fas fa-sync"></i> Atualizar</button>
             </div>
         </div>
     </nav>
 
     <div class="max-w-7xl mx-auto p-4 space-y-6">
-        <div id="lista" class="space-y-4 text-center text-gray-400 mt-10">
-            <i class="fas fa-circle-notch fa-spin text-2xl"></i><br>Carregando dados...
+
+        <!-- ÁREA DE KPIs (Números Grandes) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded shadow border-l-4 border-blue-500">
+                <span class="text-xs font-bold text-gray-400 uppercase">Total Vistorias</span>
+                <p id="kpiTotal" class="text-2xl font-bold text-slate-800">0</p>
+            </div>
+            <div class="bg-white p-4 rounded shadow border-l-4 border-green-500">
+                <span class="text-xs font-bold text-gray-400 uppercase">Aprovados</span>
+                <p id="kpiAprovados" class="text-2xl font-bold text-green-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded shadow border-l-4 border-red-500">
+                <span class="text-xs font-bold text-gray-400 uppercase">Reprovados</span>
+                <p id="kpiReprovados" class="text-2xl font-bold text-red-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded shadow border-l-4 border-orange-500">
+                <span class="text-xs font-bold text-gray-400 uppercase">Taxa Aprovação</span>
+                <p id="kpiTaxa" class="text-2xl font-bold text-orange-600">0%</p>
+            </div>
         </div>
+
+        <!-- ÁREA DE GRÁFICOS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Gráfico 1: Status Geral -->
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Status da Frota</h3>
+                <div class="h-64 flex justify-center">
+                    <canvas id="chartStatus"></canvas>
+                </div>
+            </div>
+            <!-- Gráfico 2: Principais Defeitos -->
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Principais Falhas</h3>
+                <div class="h-64 flex justify-center">
+                    <canvas id="chartFalhas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- LISTA DE REGISTROS -->
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-xl text-slate-700">Histórico Recente</h3>
+                <input id="busca" onkeyup="filtrarLista()" placeholder="Filtrar placa..." class="border p-2 rounded text-sm uppercase">
+            </div>
+            <div id="lista" class="space-y-4 text-center text-gray-400">Carregando dados...</div>
+        </div>
+
     </div>
 
-    <!-- MODAIS -->
+    <!-- MODAIS (Iguais aos anteriores) -->
     <div id="modalFrota" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded shadow-xl w-96">
             <h2 class="font-bold mb-4">Gerenciar Frota</h2>
@@ -55,12 +101,14 @@
     </div>
 
     <script>
-        // --- LOGO (CDN Confiável) ---
         const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/10832/10832132.png";
-
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+        
+        let dadosGlobais = [];
+        let chart1 = null;
+        let chart2 = null;
 
         window.onload = function() {
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
@@ -70,163 +118,159 @@
 
         async function carregarDados() {
             const list = document.getElementById('lista');
-            const busca = document.getElementById('busca').value.toUpperCase();
-            let q = sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(50);
-            if(busca) q = q.ilike('placa', `%${busca}%`);
+            // Carrega mais dados para os gráficos ficarem bonitos (100 últimos)
+            const { data } = await sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(100);
             
-            const { data } = await q;
+            dadosGlobais = data;
+            atualizarKPIs(data);
+            renderizarLista(data);
+        }
+
+        function atualizarKPIs(data) {
+            // 1. Cálculos Básicos
+            const total = data.length;
+            // Um veículo é aprovado se TODOS os itens forem true (ou null, assumindo ok para legados)
+            const aprovados = data.filter(i => 
+                (i.pneu_ok !== false) && (i.luzes_ok !== false) && (i.fluidos_ok !== false) && 
+                (i.lataria_ok !== false) && (i.interior_ok !== false)
+            ).length;
+            const reprovados = total - aprovados;
+            const taxa = total > 0 ? Math.round((aprovados / total) * 100) : 0;
+
+            // Atualiza tela
+            document.getElementById('kpiTotal').innerText = total;
+            document.getElementById('kpiAprovados').innerText = aprovados;
+            document.getElementById('kpiReprovados').innerText = reprovados;
+            document.getElementById('kpiTaxa').innerText = taxa + "%";
+
+            // 2. Contagem de Falhas Específicas
+            let falhas = { 'Pneu': 0, 'Luzes': 0, 'Fluídos': 0, 'Lataria': 0, 'Interior': 0 };
+            data.forEach(i => {
+                if(i.pneu_ok === false) falhas['Pneu']++;
+                if(i.luzes_ok === false) falhas['Luzes']++;
+                if(i.fluidos_ok === false) falhas['Fluídos']++;
+                if(i.lataria_ok === false) falhas['Lataria']++;
+                if(i.interior_ok === false) falhas['Interior']++;
+            });
+
+            gerarGraficos(aprovados, reprovados, falhas);
+        }
+
+        function gerarGraficos(aprov, reprov, objFalhas) {
+            // Gráfico 1: Pizza
+            const ctx1 = document.getElementById('chartStatus').getContext('2d');
+            if(chart1) chart1.destroy();
+            chart1 = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Aprovados', 'Reprovados'],
+                    datasets: [{
+                        data: [aprov, reprov],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Gráfico 2: Barras
+            const ctx2 = document.getElementById('chartFalhas').getContext('2d');
+            if(chart2) chart2.destroy();
+            chart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(objFalhas),
+                    datasets: [{
+                        label: 'Qtd. de Falhas',
+                        data: Object.values(objFalhas),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: {display: false} }
+                }
+            });
+        }
+
+        function renderizarLista(data) {
+            const list = document.getElementById('lista');
             list.innerHTML = '';
             
-            if(data.length === 0) list.innerHTML = '<p class="text-gray-400">Nenhum registro.</p>';
+            if(data.length === 0) { list.innerHTML = '<p class="text-gray-400">Vazio.</p>'; return; }
 
             data.forEach(i => {
                 const pdfData = encodeURIComponent(JSON.stringify(i));
+                const tudoOk = (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
                 
-                // --- LÓGICA DE ALERTA DE OCORRÊNCIA ---
-                // Verifica se TUDO está OK (todos true)
-                const tudoOk = i.pneu_ok && i.luzes_ok && i.fluidos_ok && i.lataria_ok && i.interior_ok;
-                
-                const cardClass = tudoOk 
-                    ? "border-green-500 hover:shadow-green-100" 
-                    : "border-red-500 bg-red-50 hover:shadow-red-100";
-                
-                const statusBadge = tudoOk
-                    ? `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded border border-green-200"><i class="fas fa-check-circle"></i> APROVADO</span>`
-                    : `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded border border-red-700 animate-pulse"><i class="fas fa-exclamation-triangle"></i> MANUTENÇÃO</span>`;
+                const cardClass = tudoOk ? "border-green-500" : "border-red-500 bg-red-50";
+                const statusBadge = tudoOk 
+                    ? `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded border border-green-200">APROVADO</span>`
+                    : `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded border border-red-700 animate-pulse">MANUTENÇÃO</span>`;
 
                 const card = `
                     <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${cardClass} transition">
-                        <img src="${i.foto_url}" class="w-full md:w-32 h-32 object-cover rounded bg-gray-100 cursor-pointer border hover:opacity-80" onclick="window.open('${i.foto_url}')">
-                        <div class="flex-1">
+                        <img src="${i.foto_url}" class="w-20 h-20 object-cover rounded bg-gray-100 border cursor-pointer" onclick="window.open('${i.foto_url}')">
+                        <div class="flex-1 text-left">
                             <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-xl text-slate-800 tracking-tight">${i.placa}</h3>
+                                <h3 class="font-bold text-lg text-slate-800">${i.placa}</h3>
                                 ${statusBadge}
                             </div>
-                            <p class="text-sm text-gray-600 font-bold flex items-center gap-2"><i class="fas fa-user-circle text-gray-400"></i> ${i.motorista}</p>
-                            <p class="text-xs text-gray-400 mt-1"><i class="far fa-clock"></i> ${new Date(i.created_at).toLocaleString()}</p>
+                            <p class="text-sm text-gray-600 font-bold">${i.motorista}</p>
+                            <p class="text-xs text-gray-400">${new Date(i.created_at).toLocaleString()}</p>
                             
-                            <div class="mt-3 text-xs bg-slate-50 p-2 rounded flex gap-4 border border-slate-100 font-mono text-slate-600">
-                                <span><b>KM:</b> ${i.km}</span> <span><b>TANQUE:</b> ${i.combustivel}</span>
-                            </div>
-
-                            <!-- Se houver falha, mostra o que falhou -->
-                            ${!tudoOk ? `<div class="mt-2 text-xs text-red-600 font-bold">FALHAS: 
-                                ${!i.pneu_ok ? 'PNEU ' : ''}
-                                ${!i.luzes_ok ? 'LUZES ' : ''}
-                                ${!i.fluidos_ok ? 'FLUÍDOS ' : ''}
-                                ${!i.lataria_ok ? 'LATARIA ' : ''}
-                                ${!i.interior_ok ? 'INTERIOR ' : ''}
+                            ${!tudoOk ? `<div class="mt-1 text-xs text-red-600 font-bold">FALHAS: 
+                                ${i.pneu_ok===false?'PNEU ':''} ${i.luzes_ok===false?'LUZES ':''} ${i.fluidos_ok===false?'FLUÍDOS ':''} ${i.lataria_ok===false?'LATARIA ':''} ${i.interior_ok===false?'INTERIOR':''}
                             </div>` : ''}
-
-                            ${i.observacao ? `<p class="mt-2 text-xs text-gray-500 italic truncate border-l-2 border-orange-300 pl-2">"${i.observacao}"</p>` : ''}
                         </div>
-
-                        <div class="flex md:flex-col gap-2 justify-center min-w-[100px]">
-                            <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 py-2 rounded text-sm hover:bg-slate-700 w-full shadow"><i class="fas fa-file-pdf"></i> PDF</button>
-                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-center text-sm hover:bg-blue-100 w-full border border-blue-100"><i class="fas fa-map-marker-alt"></i> Mapa</a>
-                            <button onclick="apagarChecklist(${i.id})" class="bg-white text-red-500 border border-red-100 px-3 py-2 rounded text-sm hover:bg-red-50 w-full"><i class="fas fa-trash"></i></button>
+                        <div class="flex gap-2 justify-center items-center">
+                            <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 py-2 rounded text-xs hover:bg-slate-700"><i class="fas fa-file-pdf"></i></button>
+                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-xs hover:bg-blue-100 border border-blue-100"><i class="fas fa-map-marker-alt"></i></a>
+                            <button onclick="apagarChecklist(${i.id})" class="text-red-400 hover:text-red-600 px-2"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>`;
                 list.innerHTML += card;
             });
         }
 
+        // Filtro local da lista (sem recarregar banco)
+        function filtrarLista() {
+            const termo = document.getElementById('busca').value.toUpperCase();
+            const filtrados = dadosGlobais.filter(d => d.placa.includes(termo));
+            renderizarLista(filtrados);
+        }
+
         async function apagarChecklist(id) {
-            if(!confirm("Excluir registro permanentemente?")) return;
+            if(!confirm("Excluir?")) return;
             await sb.from('checklists').delete().match({id});
             carregarDados();
         }
 
+        // PDF (Mantido da versão anterior)
         function gerarPDF(d) {
             const i = JSON.parse(decodeURIComponent(d));
             const dataF = new Date(i.created_at).toLocaleString('pt-BR');
             const obs = i.observacao || "Nenhuma.";
-            
-            const check = (val) => val ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold;background:#fee2e2;padding:2px">FALHA</span>';
-            const tudoOk = i.pneu_ok && i.luzes_ok && i.fluidos_ok && i.lataria_ok && i.interior_ok;
-
-            const htmlAss = i.assinatura_url 
-                ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` 
-                : `<div class="assinatura-box"><p style="color:red">[SEM ASSINATURA]</p></div>`;
+            const check = (val) => (val!==false) ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold;background:#fee2e2;padding:2px">FALHA</span>';
+            const tudoOk = (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
+            const htmlAss = i.assinatura_url ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` : ``;
 
             const w = window.open('','','width=900,height=1100');
-            w.document.write(`
-                <html>
-                <head>
-                    <title>Relatório ${i.placa}</title>
-                    <style>
-                        body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-                        .header { border-bottom: 3px solid #1e293b; padding-bottom: 20px; margin-bottom: 20px; display: flex; align-items: center; }
-                        .logo-pdf { height: 60px; margin-right: 20px; }
-                        .titulo h1 { margin: 0; color: #1e293b; font-size: 24px; text-transform: uppercase; }
-                        .meta { text-align: right; font-size: 12px; color: #666; margin-left: auto; }
-                        
-                        .status-banner { text-align: center; padding: 10px; margin-bottom: 20px; font-weight: bold; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
-                        .aprovado { background-color: #dcfce7; color: #166534; border-color: #86efac; }
-                        .reprovado { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-
-                        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-                        .box { background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
-                        .label { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; }
-                        .valor { font-size: 14px; font-weight: 600; color: #0f172a; }
-
-                        .checklist-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        .checklist-table th { text-align: left; background: #e2e8f0; padding: 8px; font-size: 11px; }
-                        .checklist-table td { border-bottom: 1px solid #eee; padding: 8px; font-size: 13px; }
-
-                        .obs-box { background: #fff7ed; border: 1px solid #fdba74; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
-                        .foto-container { text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0; padding: 5px; }
-                        .foto-main { max-height: 350px; max-width: 100%; }
-                        
-                        .assinatura-box { text-align: center; margin-top: 30px; }
-                        .ass-img { height: 60px; }
-                        .linha { color: #ccc; }
-                        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; font-size: 9px; color: #999; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <img src="${LOGO_URL}" class="logo-pdf">
-                        <div class="titulo"><h1>Vistoria Técnica</h1></div>
-                        <div class="meta">ID: #${i.id}<br>${dataF}</div>
-                    </div>
-
-                    <div class="status-banner ${tudoOk ? 'aprovado' : 'reprovado'}">
-                        RESULTADO: ${tudoOk ? 'VEÍCULO LIBERADO' : 'REQUER MANUTENÇÃO'}
-                    </div>
-
-                    <div class="grid-info">
-                        <div class="box"><span class="label">Veículo</span><span class="valor">${i.placa}</span></div>
-                        <div class="box"><span class="label">Condutor</span><span class="valor">${i.motorista}</span></div>
-                        <div class="box"><span class="label">KM Atual</span><span class="valor">${i.km}</span></div>
-                        <div class="box"><span class="label">Combustível</span><span class="valor">${i.combustivel}</span></div>
-                    </div>
-
-                    <h3>Itens Inspecionados</h3>
-                    <table class="checklist-table">
-                        <tr><th>ITEM DE VERIFICAÇÃO</th><th>RESULTADO</th></tr>
-                        <tr><td>Estado Geral dos Pneus</td><td>${check(i.pneu_ok)}</td></tr>
-                        <tr><td>Sistema de Iluminação (Faróis/Setas)</td><td>${check(i.luzes_ok)}</td></tr>
-                        <tr><td>Níveis de Fluídos (Óleo/Água)</td><td>${check(i.fluidos_ok)}</td></tr>
-                        <tr><td>Integridade da Lataria</td><td>${check(i.lataria_ok)}</td></tr>
-                        <tr><td>Higiene e Limpeza Interna</td><td>${check(i.interior_ok)}</td></tr>
-                    </table>
-
-                    ${i.observacao ? `<div class="obs-box"><b>OBSERVAÇÕES:</b> "${obs}"</div>` : ''}
-
-                    <div class="foto-container">
-                        <img src="${i.foto_url}" class="foto-main">
-                    </div>
-
-                    ${htmlAss}
-
-                    <div class="footer">Localização: ${i.latitude}, ${i.longitude}</div>
-                    <script>setTimeout(() => { window.print(); }, 1500);<\/script>
-                </body>
-                </html>
-            `);
+            w.document.write(`<html><head><title>${i.placa}</title><style>body{font-family:sans-serif;padding:30px;color:#333}.header{display:flex;border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:20px;align-items:center}.logo{height:50px;margin-right:20px}.status{text-align:center;padding:10px;font-weight:bold;border:1px solid #ccc;margin-bottom:20px}.ok{background:#dcfce7;color:#166534}.fail{background:#fee2e2;color:#991b1b}table{width:100%;border-collapse:collapse;margin-bottom:20px}td,th{border:1px solid #eee;padding:8px;text-align:left}th{background:#f1f5f9;font-size:12px}.ass-img{height:60px}.assinatura-box{text-align:center;margin-top:40px}</style></head><body>
+            <div class="header"><img src="${LOGO_URL}" class="logo"><div><h1>RELATÓRIO DE VISTORIA</h1>ID: #${i.id} | ${dataF}</div></div>
+            <div class="status ${tudoOk?'ok':'fail'}">STATUS: ${tudoOk?'APROVADO':'REPROVADO'}</div>
+            <table><tr><th>PLACA</th><td>${i.placa}</td><th>MOTORISTA</th><td>${i.motorista}</td></tr><tr><th>KM</th><td>${i.km}</td><th>TANQUE</th><td>${i.combustivel}</td></tr></table>
+            <h3>ITENS DE INSPEÇÃO</h3>
+            <table><tr><td>Pneus</td><td>${check(i.pneu_ok)}</td></tr><tr><td>Luzes</td><td>${check(i.luzes_ok)}</td></tr><tr><td>Fluídos</td><td>${check(i.fluidos_ok)}</td></tr><tr><td>Lataria</td><td>${check(i.lataria_ok)}</td></tr><tr><td>Interior</td><td>${check(i.interior_ok)}</td></tr></table>
+            ${i.observacao ? `<div style="background:#fff7ed;padding:10px;border:1px solid orange;margin-bottom:20px">OBS: ${obs}</div>` : ''}
+            <div style="text-align:center"><img src="${i.foto_url}" style="max-height:350px;max-width:100%"></div>
+            ${htmlAss}
+            <script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
         }
 
+        // Modais (Mesmos de sempre)
         function abrir(id, cb) { document.getElementById(id).classList.remove('hidden'); if(cb) cb(); }
         function fechar(id) { document.getElementById(id).classList.add('hidden'); }
         async function loadFrota() { const l=document.getElementById('lFrota'); l.innerHTML=''; const {data}=await sb.from('frota').select('*').order('placa'); data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`); }
