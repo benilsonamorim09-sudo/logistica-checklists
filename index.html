@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Logística v15</title>
+    <title>App Logística v17</title>
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,84 +13,41 @@
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
 
-    <!-- TELA 1: LOGIN COM LGPD -->
+    <!-- LOGIN -->
     <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6">
         <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
             <img src="" class="w-28 mx-auto mb-6 logo-img object-contain">
-            
             <h1 class="text-xl font-bold text-slate-800">PORTARIA DIGITAL</h1>
-            <p class="text-gray-400 text-xs mb-8">Acesso Corporativo Seguro</p>
-
-            <div class="text-left mb-4">
-                <label class="text-[10px] font-bold text-gray-400 uppercase">Colaborador</label>
-                <div class="relative">
-                    <select id="loginUsuario" class="w-full p-3 bg-slate-50 border rounded-lg font-bold text-slate-700 appearance-none"><option>Carregando...</option></select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div>
-                </div>
-            </div>
-            <div class="text-left mb-6">
-                <label class="text-[10px] font-bold text-gray-400 uppercase">PIN de Acesso</label>
-                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border rounded-lg text-center text-3xl font-bold tracking-widest text-slate-800" placeholder="••••">
-            </div>
-
-            <!-- Aviso LGPD -->
-            <div class="bg-blue-50 p-3 rounded-lg text-[10px] text-blue-800 text-left mb-6 flex gap-2 items-start border border-blue-100">
-                <i class="fas fa-info-circle mt-0.5"></i>
-                <p>Ao entrar, você concorda com a coleta de <strong>Geolocalização</strong> e <strong>Biometria (Assinatura)</strong> para fins de auditoria operacional, conforme a LGPD.</p>
-            </div>
-
-            <button onclick="fazerLogin()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">CONCORDAR E ENTRAR</button>
+            <p class="text-gray-400 text-xs mb-8">Sistema Integrado</p>
+            <div class="text-left mb-4"><label class="text-[10px] font-bold text-gray-400 uppercase">Motorista</label><div class="relative"><select id="loginUsuario" class="w-full p-3 bg-slate-50 border rounded-lg font-bold text-slate-700 appearance-none"><option>Carregando...</option></select><div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div></div></div>
+            <div class="text-left mb-8"><label class="text-[10px] font-bold text-gray-400 uppercase">PIN</label><input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border rounded-lg text-center text-3xl font-bold tracking-widest text-slate-800" placeholder="••••"></div>
+            <button onclick="fazerLogin()" class="w-full bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95">ENTRAR</button>
         </div>
     </div>
 
-    <!-- TELA 2: MENU -->
+    <!-- MENU -->
     <div id="telaMenu" class="hidden fixed inset-0 bg-gray-100 z-40 flex flex-col p-6">
         <div class="flex justify-between items-center mb-8 mt-4">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-800">Olá, <span id="nomeMenu">...</span></h2>
-                <p class="text-gray-500 text-sm">Selecione a operação:</p>
-            </div>
+            <div><h2 class="text-2xl font-bold text-slate-800">Olá, <span id="nomeMenu">...</span></h2><p class="text-gray-500 text-sm">Selecione a operação:</p></div>
             <button onclick="sair()" class="text-red-500 font-bold text-sm bg-white px-3 py-1 rounded shadow">SAIR</button>
         </div>
-
         <div class="grid grid-cols-1 gap-4">
-            <button onclick="iniciarOperacao('SAIDA')" class="bg-white p-6 rounded-2xl shadow-md border-l-8 border-green-500 flex items-center gap-4 active:scale-95 transition">
-                <div class="bg-green-100 p-4 rounded-full text-green-600"><i class="fas fa-truck-moving text-3xl"></i></div>
-                <div class="text-left">
-                    <h3 class="font-bold text-xl text-slate-800">SAÍDA / ROTA</h3>
-                    <p class="text-xs text-gray-400">Iniciar viagem ou entrega</p>
-                </div>
-            </button>
-
-            <button onclick="iniciarOperacao('RETORNO')" class="bg-white p-6 rounded-2xl shadow-md border-l-8 border-blue-500 flex items-center gap-4 active:scale-95 transition">
-                <div class="bg-blue-100 p-4 rounded-full text-blue-600"><i class="fas fa-warehouse text-3xl"></i></div>
-                <div class="text-left">
-                    <h3 class="font-bold text-xl text-slate-800">RETORNO / PÁTIO</h3>
-                    <p class="text-xs text-gray-400">Finalizar viagem ou turno</p>
-                </div>
-            </button>
+            <button onclick="iniciarOperacao('SAIDA')" class="bg-white p-6 rounded-2xl shadow-md border-l-8 border-green-500 flex items-center gap-4 active:scale-95 transition"><div class="bg-green-100 p-4 rounded-full text-green-600"><i class="fas fa-truck-moving text-3xl"></i></div><div class="text-left"><h3 class="font-bold text-xl text-slate-800">SAÍDA</h3><p class="text-xs text-gray-400">Iniciar Rota</p></div></button>
+            <button onclick="iniciarOperacao('RETORNO')" class="bg-white p-6 rounded-2xl shadow-md border-l-8 border-blue-500 flex items-center gap-4 active:scale-95 transition"><div class="bg-blue-100 p-4 rounded-full text-blue-600"><i class="fas fa-warehouse text-3xl"></i></div><div class="text-left"><h3 class="font-bold text-xl text-slate-800">RETORNO</h3><p class="text-xs text-gray-400">Finalizar Rota</p></div></button>
         </div>
-        <div class="mt-auto text-center opacity-50"><img src="" class="w-16 mx-auto logo-img"></div>
     </div>
 
-    <!-- TELA 3: FORMULÁRIO -->
+    <!-- FORMULÁRIO -->
     <div id="appConteudo" class="hidden">
         <div class="bg-blue-900 p-6 shadow-lg rounded-b-3xl flex justify-between items-center text-white">
-            <div>
-                <h1 class="font-bold text-xl" id="tituloOperacao">CHECKLIST</h1>
-                <p id="labelMotorista" class="text-blue-200 text-xs">Motorista...</p>
-            </div>
+            <div><h1 class="font-bold text-xl" id="tituloOperacao">CHECKLIST</h1><p id="labelMotorista" class="text-blue-200 text-xs">Motorista...</p></div>
             <button onclick="voltarMenu()" class="bg-blue-800 px-3 py-1 rounded text-xs border border-blue-600">VOLTAR</button>
         </div>
 
         <div class="p-4 space-y-5 max-w-md mx-auto -mt-4">
-            
             <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">1. Identificação</h3>
-                <div class="relative">
-                    <select id="placa" onchange="salvarRascunho()" class="w-full p-3 bg-blue-50 border rounded-lg text-xl font-bold text-center uppercase appearance-none"><option>Carregando...</option></select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
-                </div>
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">1. Dados</h3>
+                <div class="relative"><select id="placa" onchange="salvarRascunho()" class="w-full p-3 bg-blue-50 border rounded-lg text-xl font-bold text-center uppercase appearance-none"><option>Carregando...</option></select><div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div></div>
                 <div class="grid grid-cols-2 gap-4">
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase">KM</label><input type="number" id="km" oninput="salvarRascunho()" class="w-full p-2 border rounded font-bold" placeholder="0"></div>
                     <div><label class="text-[10px] font-bold text-gray-400 uppercase">Tanque</label><select id="combustivel" onchange="salvarRascunho()" class="w-full p-2 border rounded bg-white"><option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Reserva</option></select></div>
@@ -98,35 +55,44 @@
             </div>
 
             <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">2. Inspeção Técnica</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600"><i class="fas fa-circle-notch w-6 text-center text-blue-400"></i>Pneus</label><select id="pneu_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600"><i class="fas fa-lightbulb w-6 text-center text-yellow-500"></i>Luzes</label><select id="luzes_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600"><i class="fas fa-oil-can w-6 text-center text-gray-500"></i>Fluídos</label><select id="fluidos_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600"><i class="fas fa-car-crash w-6 text-center text-red-400"></i>Lataria</label><select id="lataria_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600"><i class="fas fa-broom w-6 text-center text-green-500"></i>Interior</label><select id="interior_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">2. Inspeção</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Pneus</label><select id="pneu_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
+                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Luzes</label><select id="luzes_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
+                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Fluídos</label><select id="fluidos_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
+                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Lataria</label><select id="lataria_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
+                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Interior</label><select id="interior_ok" onchange="salvarRascunho()" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
                 </div>
             </div>
 
             <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
                 <h3 class="text-blue-900 font-bold text-sm uppercase mb-2">3. Evidência</h3>
-                <label class="block w-full p-4 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition">
-                    <span class="block text-blue-800 font-bold text-xs">FOTO OBRIGATÓRIA</span>
+                <label class="block w-full p-6 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition">
+                    <i class="fas fa-camera text-2xl text-blue-400"></i><span class="block text-blue-800 font-bold text-xs mt-1">TIRAR FOTO</span>
                     <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="fotoTirada()">
                 </label>
-                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2 bg-green-50 p-1 rounded">✅ Foto OK!</p>
+                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2">✅ Foto OK!</p>
                 <textarea id="observacao" oninput="salvarRascunho()" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Observações..."></textarea>
             </div>
 
+            <!-- ASSINATURA CORRIGIDA -->
             <div class="bg-white p-4 rounded-xl shadow-md border-2 border-gray-100">
-                <div class="flex justify-between items-center mb-2"><h3 class="text-blue-900 font-bold text-sm uppercase">Assinatura</h3><button onclick="limparAssinatura()" class="bg-red-50 text-red-600 px-3 py-1 rounded text-[10px] font-bold border border-red-100">LIMPAR</button></div>
-                <div class="border-2 border-gray-300 rounded-lg overflow-hidden relative bg-gray-50" style="height: 180px;"><canvas id="signature-pad" class="w-full h-full relative z-10"></canvas></div>
+                <h3 class="text-blue-900 font-bold text-sm uppercase mb-1">Validação Jurídica</h3>
+                <p class="text-[10px] text-gray-500 mb-2 leading-tight">Declaro que realizei a inspeção e os dados são verdadeiros, estando ciente das normas de segurança.</p>
+                
+                <div class="border-2 border-gray-300 rounded-lg overflow-hidden relative bg-white" style="height: 180px;">
+                    <canvas id="signature-pad" class="w-full h-full relative z-10"></canvas>
+                </div>
+                
+                <div class="flex justify-end mt-2">
+                    <button onclick="limparAssinatura()" class="text-red-500 text-xs font-bold underline">Limpar Assinatura</button>
+                </div>
             </div>
 
             <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center">
                 <span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i>
             </button>
-            <p class="text-center text-xs text-gray-400 mt-4 pb-4">v15.0 - LGPD Compliance</p>
+            <p class="text-center text-xs text-gray-400 mt-4 pb-4">v17.0</p>
         </div>
     </div>
 
@@ -144,6 +110,7 @@
             if(salvo) { motoristaAtual = salvo; mostrarMenu(); }
         };
 
+        // ... [Funções de Navegação e Login iguais as anteriores] ...
         function mostrarMenu() { document.getElementById('telaLogin').classList.add('hidden'); document.getElementById('appConteudo').classList.add('hidden'); document.getElementById('telaMenu').classList.remove('hidden'); document.getElementById('nomeMenu').innerText = motoristaAtual; }
         function iniciarOperacao(t) { operacaoAtual=t; document.getElementById('telaMenu').classList.add('hidden'); document.getElementById('appConteudo').classList.remove('hidden'); document.getElementById('tituloOperacao').innerText = t==='SAIDA'?'CHECKLIST SAÍDA':'CHECKLIST RETORNO'; document.getElementById('labelMotorista').innerText = motoristaAtual; setTimeout(()=>{configurarCanvas();recuperarRascunho()},500); }
         function voltarMenu() { document.getElementById('appConteudo').classList.add('hidden'); document.getElementById('telaMenu').classList.remove('hidden'); }
@@ -154,27 +121,59 @@
         function salvarRascunho() { const d={placa:document.getElementById('placa').value, km:document.getElementById('km').value, obs:document.getElementById('observacao').value}; localStorage.setItem('rascunho',JSON.stringify(d)); }
         function recuperarRascunho() { const r=localStorage.getItem('rascunho'); if(r){const d=JSON.parse(r); document.getElementById('placa').value=d.placa||""; document.getElementById('km').value=d.km||""; document.getElementById('observacao').value=d.obs||""; } }
         function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
-        const canvas=document.getElementById('signature-pad'); const ctx=canvas.getContext('2d'); let writingMode=false;
-        function configurarCanvas() { const r=Math.max(window.devicePixelRatio||1,1); canvas.width=canvas.offsetWidth*r; canvas.height=canvas.offsetHeight*r; ctx.scale(r,r); ctx.lineWidth=3; ctx.lineCap='round'; ctx.strokeStyle='#000'; }
-        window.addEventListener("resize",configurarCanvas);
+
+        // --- CORREÇÃO DA ASSINATURA (CANVAS BRANCO) ---
+        const canvas = document.getElementById('signature-pad'); 
+        const ctx = canvas.getContext('2d'); 
+        let writingMode = false;
+
+        function configurarCanvas() { 
+            const r = Math.max(window.devicePixelRatio||1,1); 
+            canvas.width = canvas.offsetWidth * r; 
+            canvas.height = canvas.offsetHeight * r; 
+            ctx.scale(r,r); 
+            
+            // PREENCHE COM BRANCO IMEDIATAMENTE (O Pulo do Gato)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.lineWidth = 3; 
+            ctx.lineCap = 'round'; 
+            ctx.strokeStyle = '#000000'; 
+        }
+        
+        window.addEventListener("resize", configurarCanvas);
         const getPos=(e)=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}};
         const start=(e)=>{writingMode=true;ctx.beginPath();const{x,y}=getPos(e);ctx.moveTo(x,y);e.preventDefault()};
         const end=(e)=>{writingMode=false;e.preventDefault()};
         const move=(e)=>{if(!writingMode)return;const{x,y}=getPos(e);ctx.lineTo(x,y);ctx.stroke();e.preventDefault()};
         canvas.addEventListener('touchstart',start,{passive:false}); canvas.addEventListener('touchend',end,{passive:false}); canvas.addEventListener('touchmove',move,{passive:false});
         canvas.addEventListener('mousedown',start); canvas.addEventListener('mouseup',end); canvas.addEventListener('mousemove',move);
-        function limparAssinatura(){ctx.clearRect(0,0,canvas.width,canvas.height)}
+        
+        function limparAssinatura(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            // RE-PREENCHE COM BRANCO AO LIMPAR
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
         async function enviarDados() {
             const btn=document.getElementById('btnEnviar');
             if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) return alert("Preencha Placa, KM e Foto!");
             btn.disabled=true; btn.innerHTML='ENVIANDO...'; btn.classList.add('opacity-50');
+            
             navigator.geolocation.getCurrentPosition(async (pos)=>{
                 try {
-                    const nomeFoto=`foto_${Date.now()}.jpg`; await sb.storage.from('evidencias').upload(nomeFoto, document.getElementById('foto').files[0]);
-                    const fotoUrl=`${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
-                    const assBlob=await new Promise(r=>canvas.toBlob(r)); const nomeAss=`ass_${Date.now()}.png`;
+                    const arqFoto = document.getElementById('foto').files[0];
+                    const nomeFoto = `foto_${Date.now()}.jpg`;
+                    await sb.storage.from('evidencias').upload(nomeFoto, arqFoto);
+                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
+
+                    const assBlob = await new Promise(r=>canvas.toBlob(r, 'image/jpeg')); // JPEG é melhor para fundo branco
+                    const nomeAss = `ass_${Date.now()}.jpg`;
                     await sb.storage.from('evidencias').upload(nomeAss, assBlob);
-                    const assUrl=`${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
+                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
+
                     await sb.from('checklists').insert({
                         tipo_operacao:operacaoAtual, placa:document.getElementById('placa').value, motorista:motoristaAtual, km:document.getElementById('km').value, combustivel:document.getElementById('combustivel').value,
                         pneu_ok:document.getElementById('pneu_ok').value==='true', luzes_ok:document.getElementById('luzes_ok').value==='true', fluidos_ok:document.getElementById('fluidos_ok').value==='true',
@@ -188,4 +187,4 @@
         }
     </script>
 </body>
-    </html>
+</html>
