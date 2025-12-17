@@ -3,46 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logística App v3</title>
+    <title>Dashboard Logístico</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Ícones -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js (Para os Gráficos) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-200 p-4">
+<body class="bg-slate-100 min-h-screen">
 
-    <div class="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
-        <div class="bg-blue-800 p-4 text-center">
-            <h1 class="text-white text-xl font-bold">🚛 Controle de Saída</h1>
-            <p class="text-blue-200 text-sm">Versão Final</p>
+    <!-- Barra Superior -->
+    <nav class="bg-blue-900 p-4 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i>Gestão Logística</h1>
+            <div class="space-x-2">
+                <button onclick="baixarExcel()" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+                <button onclick="carregarDados()" class="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded text-sm">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Área de Conteúdo -->
+    <div class="max-w-5xl mx-auto p-4 space-y-6">
+        
+        <!-- KPIs (Indicadores) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Card Total -->
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                <p class="text-gray-500 text-xs font-bold uppercase">Total Vistorias</p>
+                <p id="kpi-total" class="text-3xl font-bold text-slate-800">0</p>
+            </div>
+            <!-- Card Aprovados -->
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                <p class="text-gray-500 text-xs font-bold uppercase">Aprovados</p>
+                <p id="kpi-aprovados" class="text-3xl font-bold text-green-600">0</p>
+            </div>
+            <!-- Card Reprovados -->
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
+                <p class="text-gray-500 text-xs font-bold uppercase">Com Falha</p>
+                <p id="kpi-reprovados" class="text-3xl font-bold text-red-600">0</p>
+            </div>
         </div>
 
-        <div class="p-6 space-y-5">
-            <div>
-                <label class="font-bold text-gray-700">Placa do Veículo</label>
-                <input type="text" id="placa" class="w-full mt-1 p-3 border-2 border-gray-300 rounded-lg uppercase text-lg" placeholder="ABC-1234">
+        <!-- Área do Gráfico -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-slate-600 font-bold mb-4 border-b pb-2">Status da Frota</h3>
+            <div class="h-64 flex justify-center">
+                <canvas id="graficoPneus"></canvas>
             </div>
+        </div>
 
-            <div>
-                <label class="font-bold text-gray-700">Motorista</label>
-                <input type="text" id="motorista" class="w-full mt-1 p-3 border-2 border-gray-300 rounded-lg" placeholder="Nome Completo">
+        <!-- Lista Detalhada -->
+        <div>
+            <h3 class="text-slate-600 font-bold mb-4 uppercase text-sm tracking-wide">Histórico Recente</h3>
+            <div id="lista-checklists" class="space-y-4">
+                <p class="text-center text-gray-500 mt-10">Carregando dados...</p>
             </div>
-
-            <div>
-                <label class="font-bold text-gray-700">Estado dos Pneus</label>
-                <select id="pneu_ok" class="w-full mt-1 p-3 border-2 border-gray-300 rounded-lg bg-white">
-                    <option value="true">✅ OK - Em bom estado</option>
-                    <option value="false">❌ RUIM - Pneu careca/furo</option>
-                </select>
-            </div>
-
-            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <label class="font-bold text-gray-700 block mb-2">📸 Foto Obrigatória</label>
-                <input type="file" id="foto" accept="image/*" capture="environment" class="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 file:text-blue-700">
-            </div>
-
-            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg text-lg shadow-md transition transform active:scale-95">
-                📍 ENVIAR REGISTRO
-            </button>
-            <p id="status" class="text-center text-sm font-bold text-gray-500 mt-2">Pronto para enviar</p>
         </div>
     </div>
 
@@ -50,64 +73,116 @@
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
 
-        // CORREÇÃO: Usando 'window.supabase' e nomeando a variável como 'meuSupabase'
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+        let dadosGlobais = []; // Guarda os dados para usar no Excel e Gráfico
 
-        async function enviarDados() {
-            const btn = document.getElementById('btnEnviar');
-            const status = document.getElementById('status');
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            status.innerText = "🔄 Iniciando GPS...";
+        window.onload = function() {
+            let senha = prompt("Senha de Gerente:");
+            if(senha !== "1234") {
+                document.body.innerHTML = "<h1 class='text-center mt-10 text-red-600 font-bold'>Acesso Negado</h1>";
+                return;
+            }
+            carregarDados();
+        }
 
-            const opcoesGPS = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
+        async function carregarDados() {
+            const container = document.getElementById('lista-checklists');
+            
+            // Busca TUDO (limite 100 para o gráfico ficar bonito)
+            const { data, error } = await meuSupabase
+                .from('checklists')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
 
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                try {
-                    status.innerText = "📍 GPS OK! Enviando foto...";
-                    const placa = document.getElementById('placa').value.toUpperCase();
-                    const motorista = document.getElementById('motorista').value;
-                    const pneuOk = document.getElementById('pneu_ok').value === 'true';
-                    const arquivoFoto = document.getElementById('foto').files[0];
+            if (error) { alert("Erro: " + error.message); return; }
+            dadosGlobais = data; // Salva na memória
 
-                    if (!placa || !motorista) throw new Error("Preencha Placa e Motorista!");
-                    if (!arquivoFoto) throw new Error("A foto é obrigatória!");
+            // Atualiza KPIs
+            atualizarDashboard(data);
 
-                    const nomeArquivo = Date.now() + '_' + Math.random().toString(36).substring(7) + '.jpg';
-                    
-                    // CORREÇÃO: Usando meuSupabase
-                    const { error: erroUpload } = await meuSupabase.storage.from('evidencias').upload(nomeArquivo, arquivoFoto);
-                    if (erroUpload) throw erroUpload;
+            // Renderiza Lista
+            container.innerHTML = '';
+            data.forEach(item => {
+                const dataFormatada = new Date(item.created_at).toLocaleString('pt-BR');
+                const statusHtml = item.pneu_ok 
+                    ? '<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> OK</span>' 
+                    : '<span class="text-red-600 font-bold"><i class="fas fa-times-circle"></i> FALHA</span>';
+                
+                const linkMapa = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
 
-                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeArquivo}`;
-                    status.innerText = "💾 Salvando no banco...";
+                const card = `
+                    <div class="bg-white rounded border-l-4 ${item.pneu_ok ? 'border-green-500' : 'border-red-500'} p-4 shadow flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-lg">${item.placa}</h4>
+                            <p class="text-sm text-gray-500">${item.motorista} • ${dataFormatada}</p>
+                        </div>
+                        <div class="text-center">${statusHtml}</div>
+                        <div class="flex gap-2">
+                            <a href="${item.foto_url}" target="_blank" class="text-blue-600 border border-blue-600 px-3 py-1 rounded text-sm hover:bg-blue-50">Foto</a>
+                            <a href="${linkMapa}" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Mapa</a>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
 
-                    // CORREÇÃO: Usando meuSupabase
-                    const { error: erroBanco } = await meuSupabase.from('checklists').insert({
-                        placa: placa,
-                        motorista: motorista,
-                        pneu_ok: pneuOk,
-                        foto_url: fotoUrl,
-                        latitude: pos.coords.latitude,
-                        longitude: pos.coords.longitude
-                    });
+        function atualizarDashboard(dados) {
+            // 1. Cálculos
+            const total = dados.length;
+            const aprovados = dados.filter(d => d.pneu_ok).length;
+            const reprovados = total - aprovados;
 
-                    if (erroBanco) throw erroBanco;
-                    alert("✅ SUCESSO! Dados enviados.");
-                    window.location.reload();
+            // 2. Atualiza Números na Tela
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-aprovados').innerText = aprovados;
+            document.getElementById('kpi-reprovados').innerText = reprovados;
 
-                } catch (erro) {
-                    alert("❌ Erro: " + erro.message);
-                    status.innerText = "Tente novamente.";
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50');
+            // 3. Desenha o Gráfico (Chart.js)
+            const ctx = document.getElementById('graficoPneus').getContext('2d');
+            
+            // Se já existir gráfico, destroi para criar outro (evita bugs)
+            if(window.meuGrafico) window.meuGrafico.destroy();
+
+            window.meuGrafico = new Chart(ctx, {
+                type: 'doughnut', // Tipo Rosca
+                data: {
+                    labels: ['Aprovados', 'Com Falha'],
+                    datasets: [{
+                        data: [aprovados, reprovados],
+                        backgroundColor: ['#22c55e', '#ef4444'], // Verde e Vermelho
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
                 }
-            }, (erro) => {
-                alert("⚠️ Erro de GPS: " + erro.message);
-                status.innerText = "Sem GPS";
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-            }, opcoesGPS);
+            });
+        }
+
+        function baixarExcel() {
+            // Gambiarra inteligente para criar CSV sem biblioteca pesada
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Data,Placa,Motorista,Pneu OK?,Latitude,Longitude,Link Foto\n"; // Cabeçalho
+
+            dadosGlobais.forEach(row => {
+                const dataStr = new Date(row.created_at).toLocaleDateString();
+                const linha = `${dataStr},${row.placa},${row.motorista},${row.pneu_ok ? 'SIM' : 'NAO'},${row.latitude},${row.longitude},${row.foto_url}`;
+                csvContent += linha + "\n";
+            });
+
+            // Cria um link invisível e clica nele para baixar
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "relatorio_logistica.csv");
+            document.body.appendChild(link);
+            link.click();
         }
     </script>
 </body>
