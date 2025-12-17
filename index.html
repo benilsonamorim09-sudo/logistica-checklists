@@ -3,217 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Logística Pro</title>
+    <title>App Logística Seguro</title>
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Previne arrastar a tela enquanto assina */
-        canvas { touch-action: none; background: #fff; border: 2px dashed #ccc; border-radius: 10px; cursor: crosshair; }
-    </style>
+    <style>canvas { touch-action: none; background: #fff; border: 2px dashed #ccc; border-radius: 10px; }</style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
 
-    <div class="bg-blue-900 p-6 text-center shadow-lg rounded-b-3xl">
-        <h1 class="text-white text-2xl font-bold tracking-wide"><i class="fas fa-file-signature"></i> CHECKLIST</h1>
-        <p class="text-blue-200 text-xs mt-1">Validação Digital</p>
-    </div>
+    <!-- TELA DE LOGIN (Sobrepõe tudo) -->
+    <div id="telaLogin" class="fixed inset-0 bg-blue-900 z-50 flex flex-col items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center">
+            <h1 class="text-2xl font-bold text-blue-900 mb-2"><i class="fas fa-user-lock"></i> IDENTIFICAÇÃO</h1>
+            <p class="text-gray-500 text-sm mb-6">Selecione seu nome e digite o PIN</p>
 
-    <div class="p-4 -mt-4 space-y-4 max-w-md mx-auto">
-        
-        <!-- Seleção de Veículo -->
-        <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
-            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">Identificação</h3>
-            <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Placa</label>
+            <div class="text-left mb-4">
+                <label class="text-xs font-bold text-gray-500 uppercase">Colaborador</label>
                 <div class="relative">
-                    <select id="placa" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-xl font-bold text-center uppercase appearance-none">
+                    <select id="loginUsuario" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-lg font-bold appearance-none">
                         <option value="">Carregando...</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">▼</div>
                 </div>
             </div>
-            <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Motorista</label>
-                <input type="text" id="motorista" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg" placeholder="Nome Completo">
+
+            <div class="text-left mb-6">
+                <label class="text-xs font-bold text-gray-500 uppercase">Senha (PIN)</label>
+                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border border-gray-300 rounded-lg text-center text-2xl tracking-widest font-bold" placeholder="****">
             </div>
+
+            <button onclick="fazerLogin()" class="w-full bg-blue-800 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95">ACESSAR SISTEMA</button>
+        </div>
+        <p class="text-blue-300 text-xs mt-6">Logística Pro v6.0</p>
+    </div>
+
+    <!-- CONTEÚDO DO APP (Escondido inicialmente) -->
+    <div id="appConteudo" class="hidden">
+        
+        <!-- Barra Topo -->
+        <div class="bg-blue-900 p-6 text-center shadow-lg rounded-b-3xl flex justify-between items-center">
+            <div>
+                <h1 class="text-white font-bold text-xl"><i class="fas fa-shipping-fast"></i> CHECKLIST</h1>
+                <p id="labelMotorista" class="text-blue-200 text-xs text-left mt-1">Motorista: ...</p>
+            </div>
+            <button onclick="sair()" class="text-white bg-blue-800 px-3 py-1 rounded text-xs border border-blue-700">SAIR</button>
         </div>
 
-        <!-- Dados -->
-        <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
-            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">Dados</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">KM</label>
-                    <input type="number" id="km" class="w-full p-3 border border-gray-200 rounded-lg font-bold" placeholder="00000">
+        <div class="p-4 -mt-4 space-y-4 max-w-md mx-auto">
+            
+            <!-- Seleção Veículo -->
+            <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">Veículo</h3>
+                <div class="relative">
+                    <select id="placa" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-xl font-bold text-center uppercase appearance-none">
+                        <option value="">Carregando frota...</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">▼</div>
+                </div>
+            </div>
+
+            <!-- Dados Operacionais -->
+            <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">Dados</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">KM</label>
+                        <input type="number" id="km" class="w-full p-3 border rounded-lg font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Combustível</label>
+                        <select id="combustivel" class="w-full p-3 border rounded-lg bg-white">
+                            <option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">Combustível</label>
-                    <select id="combustivel" class="w-full p-3 border border-gray-200 rounded-lg bg-white">
-                        <option value="Cheio">FULL</option>
-                        <option value="3/4">3/4</option>
-                        <option value="1/2">1/2</option>
-                        <option value="1/4">1/4</option>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Pneus</label>
+                    <select id="pneu_ok" class="w-full p-3 border rounded-lg bg-white">
+                        <option value="true">✅ APROVADO</option><option value="false">❌ REPROVADO</option>
                     </select>
                 </div>
             </div>
-            <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Pneus</label>
-                <select id="pneu_ok" class="w-full p-3 border border-gray-200 rounded-lg bg-white">
-                    <option value="true">✅ APROVADO</option>
-                    <option value="false">❌ REPROVADO</option>
-                </select>
+
+            <!-- Foto -->
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                <h3 class="text-blue-900 font-bold text-sm uppercase">Evidência</h3>
+                <label class="block w-full p-4 border-2 border-dashed border-blue-200 rounded-lg text-center cursor-pointer hover:bg-blue-50">
+                    <span class="text-blue-600 font-bold text-sm">FOTO</span>
+                    <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="document.getElementById('nomeFoto').classList.remove('hidden')">
+                </label>
+                <p id="nomeFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2">📸 Foto OK!</p>
+                <textarea id="observacao" rows="2" class="w-full p-3 border rounded-lg text-sm mt-2" placeholder="Obs..."></textarea>
             </div>
-        </div>
 
-        <!-- Foto -->
-        <div class="bg-white p-5 rounded-xl shadow-md space-y-4 border-l-4 border-blue-500">
-            <h3 class="text-blue-900 font-bold text-sm uppercase">Evidência</h3>
-            <label class="block w-full p-4 border-2 border-dashed border-blue-200 rounded-lg text-center cursor-pointer hover:bg-blue-50 transition">
-                <span class="text-blue-600 font-bold text-sm">FOTO DA CARGA/VEÍCULO</span>
-                <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="mostrarNomeFoto()">
-            </label>
-            <p id="nomeFoto" class="text-center text-xs text-green-600 font-bold hidden">📸 Foto OK!</p>
-            <textarea id="observacao" rows="2" class="w-full p-3 border border-gray-200 rounded-lg text-sm mt-2" placeholder="Observações..."></textarea>
-        </div>
+            <!-- Assinatura -->
+            <div class="bg-white p-5 rounded-xl shadow-md">
+                <h3 class="text-blue-900 font-bold text-sm uppercase mb-2">Assinatura</h3>
+                <canvas id="signature-pad" width="300" height="150" class="w-full"></canvas>
+                <button onclick="limparAssinatura()" class="text-xs text-red-500 underline w-full text-right">Limpar</button>
+            </div>
 
-        <!-- NOVA ÁREA: ASSINATURA -->
-        <div class="bg-white p-5 rounded-xl shadow-md space-y-2">
-            <h3 class="text-blue-900 font-bold text-sm uppercase"><i class="fas fa-pen-nib mr-2"></i>Assinatura do Motorista</h3>
-            <p class="text-xs text-gray-400">Assine com o dedo no quadro abaixo:</p>
-            
-            <canvas id="signature-pad" width="300" height="150" class="w-full"></canvas>
-            
-            <button onclick="limparAssinatura()" class="text-xs text-red-500 underline w-full text-right">Limpar / Refazer</button>
+            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 flex justify-center gap-2">
+                <span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i>
+            </button>
+            <p id="status" class="text-center text-xs text-gray-400 mt-2">Sistema Seguro</p>
         </div>
-
-        <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
-            <span>ENVIAR TUDO</span> <i class="fas fa-check-circle"></i>
-        </button>
-        <p id="status" class="text-center text-xs text-gray-400 mt-2">v5.0 - Assinatura Digital</p>
     </div>
 
     <script>
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+        
+        let motoristaAtual = ""; // Guarda quem logou
 
-        // --- LÓGICA DA ASSINATURA ---
-        const canvas = document.getElementById('signature-pad');
-        const ctx = canvas.getContext('2d');
-        let writingMode = false;
-
-        // Ajusta tamanho do canvas para a tela
-        function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            ctx.scale(ratio, ratio);
-        }
-        window.onresize = resizeCanvas;
-        setTimeout(resizeCanvas, 500); // Garante ajuste ao carregar
-
-        // Eventos de Toque (Celular) e Mouse (PC)
-        const getPos = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        const start = (e) => { writingMode = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x, y); e.preventDefault(); }
-        const end = (e) => { writingMode = false; e.preventDefault(); }
-        const move = (e) => {
-            if(!writingMode) return;
-            const {x,y} = getPos(e);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            e.preventDefault();
-        }
-
-        canvas.addEventListener('touchstart', start, {passive: false});
-        canvas.addEventListener('touchend', end, {passive: false});
-        canvas.addEventListener('touchmove', move, {passive: false});
-        canvas.addEventListener('mousedown', start);
-        canvas.addEventListener('mouseup', end);
-        canvas.addEventListener('mousemove', move);
-
-        function limparAssinatura() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // --- SISTEMA NORMAL ---
+        // --- SISTEMA DE LOGIN ---
         window.onload = async function() {
-            resizeCanvas();
-            const select = document.getElementById('placa');
-            const { data } = await meuSupabase.from('frota').select('*').order('placa');
-            if(data) {
-                select.innerHTML = '<option value="">Selecione...</option>';
-                data.forEach(v => select.innerHTML += `<option value="${v.placa}">${v.placa} - ${v.modelo}</option>`);
+            carregarUsuarios();
+            carregarFrota();
+            configurarCanvas();
+            
+            // Verifica se já estava logado
+            const salvo = localStorage.getItem('usuario_logado');
+            if(salvo) {
+                motoristaAtual = salvo;
+                entrarNoSistema();
             }
         };
 
-        function mostrarNomeFoto() { document.getElementById('nomeFoto').classList.remove('hidden'); }
+        async function carregarUsuarios() {
+            const select = document.getElementById('loginUsuario');
+            const { data } = await meuSupabase.from('funcionarios').select('*').order('nome');
+            select.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(u => {
+                // Adiciona o PIN como atributo escondido para validar (método simples)
+                select.innerHTML += `<option value="${u.nome}" data-pin="${u.pin}">${u.nome}</option>`;
+            });
+        }
 
+        function fazerLogin() {
+            const select = document.getElementById('loginUsuario');
+            const pinDigitado = document.getElementById('loginPin').value;
+            const usuarioSelecionado = select.value;
+            const pinCorreto = select.options[select.selectedIndex].getAttribute('data-pin');
+
+            if(!usuarioSelecionado) return alert("Selecione seu nome!");
+            if(pinDigitado !== pinCorreto) return alert("PIN Incorreto!");
+
+            // Login Sucesso
+            motoristaAtual = usuarioSelecionado;
+            localStorage.setItem('usuario_logado', motoristaAtual); // Salva na memória
+            entrarNoSistema();
+        }
+
+        function entrarNoSistema() {
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('appConteudo').classList.remove('hidden');
+            document.getElementById('labelMotorista').innerText = "Motorista: " + motoristaAtual;
+            configurarCanvas(); // Recalcula tamanho
+        }
+
+        function sair() {
+            localStorage.removeItem('usuario_logado');
+            window.location.reload();
+        }
+
+        // --- FUNÇÕES OPERACIONAIS ---
+        async function carregarFrota() {
+            const select = document.getElementById('placa');
+            const { data } = await meuSupabase.from('frota').select('*').order('placa');
+            if(data) data.forEach(v => select.innerHTML += `<option value="${v.placa}">${v.placa} - ${v.modelo}</option>`);
+        }
+
+        // Canvas Assinatura
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let writingMode = false;
+        function configurarCanvas() {
+            canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+        }
+        const getPos = (e) => { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
+        const start = (e) => { writingMode = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); e.preventDefault(); }
+        const end = (e) => { writingMode = false; e.preventDefault(); }
+        const move = (e) => { if(!writingMode) return; const {x,y} = getPos(e); ctx.lineTo(x,y); ctx.stroke(); e.preventDefault(); }
+        
+        canvas.addEventListener('touchstart', start, {passive:false});
+        canvas.addEventListener('touchend', end, {passive:false});
+        canvas.addEventListener('touchmove', move, {passive:false});
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mouseup', end);
+        canvas.addEventListener('mousemove', move);
+        function limparAssinatura() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+        // Enviar
         async function enviarDados() {
             const btn = document.getElementById('btnEnviar');
             const status = document.getElementById('status');
             
-            // Validações
-            if (!document.getElementById('placa').value) { alert("Selecione a Placa!"); return; }
-            if (!document.getElementById('km').value) { alert("Digite o KM!"); return; }
-            if (!document.getElementById('foto').files[0]) { alert("Tire a Foto!"); return; }
+            if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) {
+                return alert("Preencha todos os campos obrigatórios!");
+            }
 
-            // Verifica se assinou (contando pixels não brancos, simplificado)
-            // Vamos assumir que se ele clicou em enviar, ele assinou. Em produção usaria validação de pixels.
-
-            btn.disabled = true;
-            btn.innerHTML = 'ENVIANDO...';
-            btn.classList.add('opacity-50');
-            status.innerText = "Processando...";
+            btn.disabled = true; btn.innerHTML = 'ENVIANDO...'; btn.classList.add('opacity-50');
+            status.innerText = "Localizando...";
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                    // 1. Upload Foto
-                    status.innerText = "Enviando evidências...";
+                    // Uploads
                     const arquivoFoto = document.getElementById('foto').files[0];
                     const nomeFoto = `foto_${Date.now()}.jpg`;
                     await meuSupabase.storage.from('evidencias').upload(nomeFoto, arquivoFoto);
                     const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
 
-                    // 2. Upload Assinatura (Converte Canvas para Arquivo)
-                    const assinaturaBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                    const nomeAssinatura = `ass_${Date.now()}.png`;
-                    await meuSupabase.storage.from('evidencias').upload(nomeAssinatura, assinaturaBlob);
-                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAssinatura}`;
+                    const assBlob = await new Promise(r => canvas.toBlob(r));
+                    const nomeAss = `ass_${Date.now()}.png`;
+                    await meuSupabase.storage.from('evidencias').upload(nomeAss, assBlob);
+                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
 
-                    // 3. Salva no Banco
-                    status.innerText = "Salvando...";
-                    const { error } = await meuSupabase.from('checklists').insert({
+                    // Insert
+                    await meuSupabase.from('checklists').insert({
                         placa: document.getElementById('placa').value,
-                        motorista: document.getElementById('motorista').value,
+                        motorista: motoristaAtual, // Usa o nome do login
                         km: document.getElementById('km').value,
                         combustivel: document.getElementById('combustivel').value,
                         pneu_ok: document.getElementById('pneu_ok').value === 'true',
                         observacao: document.getElementById('observacao').value,
                         foto_url: fotoUrl,
-                        assinatura_url: assUrl, // CAMPO NOVO
+                        assinatura_url: assUrl,
                         latitude: pos.coords.latitude,
                         longitude: pos.coords.longitude
                     });
 
-                    if (error) throw error;
-                    alert("✅ REGISTRO ASSINADO E ENVIADO!");
+                    alert("✅ Enviado com Sucesso!");
                     window.location.reload();
 
-                } catch (erro) {
-                    alert("Erro: " + erro.message);
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50');
-                    btn.innerHTML = 'ENVIAR TUDO';
-                }
+                } catch (e) { alert("Erro: " + e.message); btn.disabled = false; btn.classList.remove('opacity-50'); btn.innerHTML = 'ENVIAR'; }
             }, () => { alert("Ative o GPS!"); btn.disabled = false; btn.classList.remove('opacity-50'); }, {enableHighAccuracy:true});
         }
     </script>
