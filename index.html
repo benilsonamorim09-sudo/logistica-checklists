@@ -2,127 +2,152 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Logística</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Logística Pro</title>
     
-    <!-- Configuração para parecer App (PWA) -->
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     
-    <!-- Estilos e Bibliotecas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 p-4 min-h-screen flex items-center justify-center">
+<body class="bg-gray-100 min-h-screen pb-10">
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- Cabeçalho -->
-        <div class="bg-blue-800 p-6 text-center">
-            <h1 class="text-white text-2xl font-bold uppercase tracking-wide">🚛 Vistoria de Saída</h1>
-            <p class="text-blue-200 text-xs mt-1">Sistema Integrado Logístico</p>
+    <!-- Topo -->
+    <div class="bg-blue-900 p-6 text-center shadow-lg rounded-b-3xl">
+        <h1 class="text-white text-2xl font-bold tracking-wide"><i class="fas fa-shipping-fast"></i> CHECKLIST</h1>
+        <p class="text-blue-200 text-xs mt-1">Controle de Frota</p>
+    </div>
+
+    <div class="p-4 -mt-4 space-y-4 max-w-md mx-auto">
+        
+        <!-- Cartão Identificação -->
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
+            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-id-card mr-2"></i>Identificação</h3>
+            
+            <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Placa</label>
+                <input type="text" id="placa" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xl font-bold text-center uppercase" placeholder="ABC-1234">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Motorista</label>
+                <input type="text" id="motorista" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg" placeholder="Nome Completo">
+            </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <!-- Cartão Veículo (Novos Campos) -->
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
+            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-tachometer-alt mr-2"></i>Dados do Veículo</h3>
             
-            <!-- Campo Placa -->
-            <div>
-                <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Placa do Veículo</label>
-                <input type="text" id="placa" class="w-full p-4 border-2 border-gray-200 rounded-xl text-xl font-bold text-center uppercase tracking-widest focus:border-blue-500 outline-none transition" placeholder="ABC-1234">
-            </div>
-
-            <!-- Campo Motorista -->
-            <div>
-                <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Nome do Motorista</label>
-                <input type="text" id="motorista" class="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 outline-none transition" placeholder="Nome Completo">
-            </div>
-
-            <!-- Campo Pneus -->
-            <div>
-                <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Situação dos Pneus</label>
-                <div class="relative">
-                    <select id="pneu_ok" class="w-full p-4 border-2 border-gray-200 rounded-xl text-lg bg-white appearance-none focus:border-blue-500 outline-none transition">
-                        <option value="true">✅ APROVADO - Em bom estado</option>
-                        <option value="false">❌ REPROVADO - Pneu careca/furo</option>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Odômetro (KM)</label>
+                    <input type="number" id="km" class="w-full p-3 border border-gray-200 rounded-lg font-bold" placeholder="Ex: 50000">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Combustível</label>
+                    <select id="combustivel" class="w-full p-3 border border-gray-200 rounded-lg bg-white">
+                        <option value="Cheio">FULL (1/1)</option>
+                        <option value="3/4">3/4</option>
+                        <option value="1/2">Meio (1/2)</option>
+                        <option value="1/4">Reserva (1/4)</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
                 </div>
             </div>
 
-            <!-- Campo Foto (Câmera) -->
-            <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-100 border-dashed">
-                <label class="block text-blue-800 font-bold mb-2 text-sm uppercase text-center">📸 Evidência Obrigatória</label>
-                <input type="file" id="foto" accept="image/*" capture="environment" class="w-full text-sm text-slate-500
-                  file:mr-4 file:py-3 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-bold
-                  file:bg-blue-600 file:text-white
-                  file:cursor-pointer hover:file:bg-blue-700
-                ">
-                <p class="text-xs text-center text-blue-400 mt-2">Tire uma foto clara da carga ou veículo</p>
+            <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Pneus</label>
+                <select id="pneu_ok" class="w-full p-3 border border-gray-200 rounded-lg bg-white">
+                    <option value="true">✅ APROVADO</option>
+                    <option value="false">❌ REPROVADO (Furo/Careca)</option>
+                </select>
             </div>
-
-            <!-- Botão de Ação -->
-            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 rounded-xl text-lg shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
-                <span>📍 ENVIAR REGISTRO</span>
-            </button>
-            
-            <!-- Status -->
-            <p id="status" class="text-center text-xs font-bold text-gray-400 mt-2">Sistema Online • Pronto para envio</p>
         </div>
+
+        <!-- Cartão Foto -->
+        <div class="bg-white p-5 rounded-xl shadow-md space-y-4 border-l-4 border-blue-500">
+            <h3 class="text-blue-900 font-bold text-sm uppercase"><i class="fas fa-camera mr-2"></i>Evidência</h3>
+            <label class="block w-full p-4 border-2 border-dashed border-blue-200 rounded-lg text-center cursor-pointer hover:bg-blue-50 transition">
+                <span class="text-blue-600 font-bold text-sm">CLIQUE PARA FOTO</span>
+                <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="mostrarNomeFoto()">
+            </label>
+            <p id="nomeFoto" class="text-center text-xs text-green-600 font-bold hidden">📸 Foto selecionada!</p>
+            
+            <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Observações (Opcional)</label>
+                <textarea id="observacao" rows="2" class="w-full p-3 border border-gray-200 rounded-lg text-sm" placeholder="Alguma avaria ou detalhe extra?"></textarea>
+            </div>
+        </div>
+
+        <!-- Botão -->
+        <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
+            <i class="fas fa-paper-plane"></i> ENVIAR CHECKLIST
+        </button>
+        <p id="status" class="text-center text-xs text-gray-400 mt-2">v3.0 - GPS Ativo</p>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO SUPABASE ---
+        // --- CONFIGURAÇÃO ---
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
 
-        // Cria conexão usando nome único para evitar erros
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+
+        function mostrarNomeFoto() {
+            document.getElementById('nomeFoto').classList.remove('hidden');
+        }
 
         async function enviarDados() {
             const btn = document.getElementById('btnEnviar');
             const status = document.getElementById('status');
             
-            // 1. Bloqueia botão
+            // Validação Inicial
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const motorista = document.getElementById('motorista').value;
+            const km = document.getElementById('km').value;
+            const arquivoFoto = document.getElementById('foto').files[0];
+
+            if (!placa || !motorista || !km) {
+                alert("⚠️ Preencha Placa, Motorista e KM!");
+                return;
+            }
+            if (!arquivoFoto) {
+                alert("⚠️ A FOTO É OBRIGATÓRIA!");
+                return;
+            }
+
+            // Trava Botão
             btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            btn.innerHTML = '<span>⏳ PROCESSANDO...</span>';
-            status.innerText = "🔄 Iniciando GPS de alta precisão...";
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
+            btn.classList.add('opacity-50');
 
-            // 2. Configuração GPS
-            const opcoesGPS = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
-
+            // GPS
+            status.innerText = "Buscando localização...";
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                    status.innerText = "📍 Localização obtida! Enviando imagem...";
+                    status.innerText = "Subindo imagem...";
                     
-                    // 3. Validação dos Campos
-                    const placa = document.getElementById('placa').value.toUpperCase();
-                    const motorista = document.getElementById('motorista').value;
-                    const pneuOk = document.getElementById('pneu_ok').value === 'true';
-                    const arquivoFoto = document.getElementById('foto').files[0];
-
-                    if (!placa || !motorista) throw new Error("Preencha Placa e Motorista!");
-                    if (!arquivoFoto) throw new Error("A foto é obrigatória para auditoria!");
-
-                    // 4. Upload da Foto
-                    const nomeArquivo = Date.now() + '_' + Math.random().toString(36).substring(7) + '.jpg';
+                    // Upload
+                    const nomeArquivo = Date.now() + '.jpg';
                     const { error: erroUpload } = await meuSupabase.storage
                         .from('evidencias')
                         .upload(nomeArquivo, arquivoFoto);
 
                     if (erroUpload) throw erroUpload;
 
-                    // URL Pública da Foto
                     const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeArquivo}`;
                     
-                    status.innerText = "💾 Salvando registro no banco...";
-
-                    // 5. Salvar Dados no Banco
+                    status.innerText = "Salvando dados...";
+                    
+                    // Salvar no Banco (Com novos campos)
                     const { error: erroBanco } = await meuSupabase.from('checklists').insert({
                         placa: placa,
                         motorista: motorista,
-                        pneu_ok: pneuOk,
+                        km: km,
+                        combustivel: document.getElementById('combustivel').value,
+                        pneu_ok: document.getElementById('pneu_ok').value === 'true',
+                        observacao: document.getElementById('observacao').value,
                         foto_url: fotoUrl,
                         latitude: pos.coords.latitude,
                         longitude: pos.coords.longitude
@@ -130,29 +155,22 @@
 
                     if (erroBanco) throw erroBanco;
 
-                    // 6. Sucesso
-                    alert("✅ SUCESSO! \nRegistro enviado e salvo na nuvem.");
+                    alert("✅ REGISTRO SALVO COM SUCESSO!");
                     window.location.reload();
 
                 } catch (erro) {
-                    alert("❌ ERRO: " + erro.message);
-                    status.innerText = "Falha no envio. Tente novamente.";
+                    alert("Erro: " + erro.message);
                     btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    btn.innerHTML = '<span>📍 ENVIAR REGISTRO</span>';
+                    btn.classList.remove('opacity-50');
+                    btn.innerHTML = 'ENVIAR CHECKLIST';
+                    status.innerText = "Erro no envio";
                 }
-            }, (erroGPS) => {
-                let msg = "Erro desconhecido no GPS.";
-                if (erroGPS.code === 1) msg = "Permissão de GPS negada. Ative nas configurações do site.";
-                if (erroGPS.code === 2) msg = "Sinal GPS indisponível. Vá para local aberto.";
-                if (erroGPS.code === 3) msg = "GPS demorou muito para responder.";
-                
-                alert("⚠️ " + msg);
-                status.innerText = "Erro: Sem localização";
+            }, (erro) => {
+                alert("Ative o GPS para continuar!");
                 btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                btn.innerHTML = '<span>📍 ENVIAR REGISTRO</span>';
-            }, opcoesGPS);
+                btn.classList.remove('opacity-50');
+                btn.innerHTML = 'ENVIAR CHECKLIST';
+            }, { enableHighAccuracy: true });
         }
     </script>
 </body>
