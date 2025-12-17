@@ -4,46 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App Logística Pro</title>
-    
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
 
-    <!-- Topo -->
     <div class="bg-blue-900 p-6 text-center shadow-lg rounded-b-3xl">
         <h1 class="text-white text-2xl font-bold tracking-wide"><i class="fas fa-shipping-fast"></i> CHECKLIST</h1>
-        <p class="text-blue-200 text-xs mt-1">Controle de Frota</p>
+        <p class="text-blue-200 text-xs mt-1">Frota Inteligente</p>
     </div>
 
     <div class="p-4 -mt-4 space-y-4 max-w-md mx-auto">
         
-        <!-- Cartão Identificação -->
         <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
-            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-id-card mr-2"></i>Identificação</h3>
+            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-truck mr-2"></i>Seleção de Veículo</h3>
             
+            <!-- MUDANÇA AQUI: Agora é um SELECT que carrega do banco -->
             <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Placa</label>
-                <input type="text" id="placa" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-xl font-bold text-center uppercase" placeholder="ABC-1234">
+                <label class="text-xs font-bold text-gray-500 uppercase">Placa do Veículo</label>
+                <div class="relative">
+                    <select id="placa" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-xl font-bold text-center uppercase appearance-none">
+                        <option value="">Carregando frota...</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
+                </div>
             </div>
+
             <div>
                 <label class="text-xs font-bold text-gray-500 uppercase">Motorista</label>
-                <input type="text" id="motorista" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg" placeholder="Nome Completo">
+                <input type="text" id="motorista" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg" placeholder="Seu Nome">
             </div>
         </div>
 
-        <!-- Cartão Veículo (Novos Campos) -->
         <div class="bg-white p-5 rounded-xl shadow-md space-y-4">
-            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-tachometer-alt mr-2"></i>Dados do Veículo</h3>
-            
+            <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-tachometer-alt mr-2"></i>Dados Operacionais</h3>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">Odômetro (KM)</label>
-                    <input type="number" id="km" class="w-full p-3 border border-gray-200 rounded-lg font-bold" placeholder="Ex: 50000">
+                    <label class="text-xs font-bold text-gray-500 uppercase">KM Atual</label>
+                    <input type="number" id="km" class="w-full p-3 border border-gray-200 rounded-lg font-bold" placeholder="123456">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 uppercase">Combustível</label>
@@ -55,92 +56,81 @@
                     </select>
                 </div>
             </div>
-
             <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Pneus</label>
+                <label class="text-xs font-bold text-gray-500 uppercase">Condição Pneus</label>
                 <select id="pneu_ok" class="w-full p-3 border border-gray-200 rounded-lg bg-white">
                     <option value="true">✅ APROVADO</option>
-                    <option value="false">❌ REPROVADO (Furo/Careca)</option>
+                    <option value="false">❌ REPROVADO</option>
                 </select>
             </div>
         </div>
 
-        <!-- Cartão Foto -->
         <div class="bg-white p-5 rounded-xl shadow-md space-y-4 border-l-4 border-blue-500">
             <h3 class="text-blue-900 font-bold text-sm uppercase"><i class="fas fa-camera mr-2"></i>Evidência</h3>
             <label class="block w-full p-4 border-2 border-dashed border-blue-200 rounded-lg text-center cursor-pointer hover:bg-blue-50 transition">
-                <span class="text-blue-600 font-bold text-sm">CLIQUE PARA FOTO</span>
+                <span class="text-blue-600 font-bold text-sm">TIRAR FOTO</span>
                 <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="mostrarNomeFoto()">
             </label>
-            <p id="nomeFoto" class="text-center text-xs text-green-600 font-bold hidden">📸 Foto selecionada!</p>
-            
-            <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Observações (Opcional)</label>
-                <textarea id="observacao" rows="2" class="w-full p-3 border border-gray-200 rounded-lg text-sm" placeholder="Alguma avaria ou detalhe extra?"></textarea>
-            </div>
+            <p id="nomeFoto" class="text-center text-xs text-green-600 font-bold hidden">📸 Foto capturada!</p>
+            <textarea id="observacao" rows="2" class="w-full p-3 border border-gray-200 rounded-lg text-sm mt-2" placeholder="Observações extras..."></textarea>
         </div>
 
-        <!-- Botão -->
         <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2">
-            <i class="fas fa-paper-plane"></i> ENVIAR CHECKLIST
+            <span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i>
         </button>
-        <p id="status" class="text-center text-xs text-gray-400 mt-2">v3.0 - GPS Ativo</p>
+        <p id="status" class="text-center text-xs text-gray-400 mt-2">v4.0 - Frota Conectada</p>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
-
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
 
-        function mostrarNomeFoto() {
-            document.getElementById('nomeFoto').classList.remove('hidden');
-        }
+        // --- NOVO: Carregar placas ao abrir o App ---
+        window.onload = async function() {
+            const select = document.getElementById('placa');
+            const { data, error } = await meuSupabase.from('frota').select('*').order('placa', { ascending: true });
+            
+            if(data && data.length > 0) {
+                select.innerHTML = '<option value="">Selecione...</option>';
+                data.forEach(veiculo => {
+                    // Mostra PLACA - MODELO no dropdown
+                    select.innerHTML += `<option value="${veiculo.placa}">${veiculo.placa} - ${veiculo.modelo}</option>`;
+                });
+            } else {
+                select.innerHTML = '<option value="">Erro ao carregar frota</option>';
+            }
+        };
+
+        function mostrarNomeFoto() { document.getElementById('nomeFoto').classList.remove('hidden'); }
 
         async function enviarDados() {
             const btn = document.getElementById('btnEnviar');
             const status = document.getElementById('status');
             
-            // Validação Inicial
-            const placa = document.getElementById('placa').value.toUpperCase();
+            const placa = document.getElementById('placa').value;
             const motorista = document.getElementById('motorista').value;
             const km = document.getElementById('km').value;
             const arquivoFoto = document.getElementById('foto').files[0];
 
-            if (!placa || !motorista || !km) {
-                alert("⚠️ Preencha Placa, Motorista e KM!");
-                return;
-            }
-            if (!arquivoFoto) {
-                alert("⚠️ A FOTO É OBRIGATÓRIA!");
-                return;
-            }
+            if (!placa || !motorista || !km) { alert("⚠️ Preencha Placa, Motorista e KM!"); return; }
+            if (!arquivoFoto) { alert("⚠️ A FOTO É OBRIGATÓRIA!"); return; }
 
-            // Trava Botão
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
+            btn.innerHTML = 'ENVIANDO...';
             btn.classList.add('opacity-50');
+            status.innerText = "Localizando...";
 
-            // GPS
-            status.innerText = "Buscando localização...";
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                    status.innerText = "Subindo imagem...";
-                    
-                    // Upload
+                    status.innerText = "Enviando foto...";
                     const nomeArquivo = Date.now() + '.jpg';
-                    const { error: erroUpload } = await meuSupabase.storage
-                        .from('evidencias')
-                        .upload(nomeArquivo, arquivoFoto);
-
+                    const { error: erroUpload } = await meuSupabase.storage.from('evidencias').upload(nomeArquivo, arquivoFoto);
                     if (erroUpload) throw erroUpload;
 
                     const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeArquivo}`;
                     
-                    status.innerText = "Salvando dados...";
-                    
-                    // Salvar no Banco (Com novos campos)
+                    status.innerText = "Salvando...";
                     const { error: erroBanco } = await meuSupabase.from('checklists').insert({
                         placa: placa,
                         motorista: motorista,
@@ -154,22 +144,20 @@
                     });
 
                     if (erroBanco) throw erroBanco;
-
-                    alert("✅ REGISTRO SALVO COM SUCESSO!");
+                    alert("✅ REGISTRO ENVIADO!");
                     window.location.reload();
 
                 } catch (erro) {
                     alert("Erro: " + erro.message);
                     btn.disabled = false;
                     btn.classList.remove('opacity-50');
-                    btn.innerHTML = 'ENVIAR CHECKLIST';
-                    status.innerText = "Erro no envio";
+                    btn.innerHTML = 'ENVIAR REGISTRO';
                 }
             }, (erro) => {
-                alert("Ative o GPS para continuar!");
+                alert("Ative o GPS!");
                 btn.disabled = false;
                 btn.classList.remove('opacity-50');
-                btn.innerHTML = 'ENVIAR CHECKLIST';
+                btn.innerHTML = 'ENVIAR REGISTRO';
             }, { enableHighAccuracy: true });
         }
     </script>
