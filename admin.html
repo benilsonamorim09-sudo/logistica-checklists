@@ -3,166 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gestor | Frota</title>
+    <title>Painel Gestor Completo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <nav class="bg-slate-800 p-4 text-white sticky top-0 z-50 shadow-md">
+    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-lg"><i class="fas fa-network-wired text-green-400 mr-2"></i>LOGÍSTICA <span class="text-slate-400">DASHBOARD</span></h1>
-            <button onclick="carregarDados()" class="bg-green-600 hover:bg-green-500 px-4 py-1 rounded text-sm transition">
-                <i class="fas fa-sync"></i>
-            </button>
+            <h1 class="font-bold text-lg"><i class="fas fa-truck-moving text-blue-400 mr-2"></i>LOGÍSTICA <span class="text-slate-400">PRO</span></h1>
+            <div class="flex gap-2">
+                <button onclick="toggleModalFrota()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-sm"><i class="fas fa-plus-circle mr-1"></i> Frota</button>
+                <button onclick="carregarDados()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-sm"><i class="fas fa-sync"></i></button>
+            </div>
         </div>
     </nav>
 
     <div class="max-w-6xl mx-auto p-4 space-y-6">
-        
-        <!-- Lista -->
+        <!-- Lista de Checklists -->
         <div id="lista-checklists" class="space-y-4">
             <p class="text-center text-gray-400 mt-10">Carregando...</p>
         </div>
+    </div>
 
+    <!-- MODAL DE CADASTRO DE FROTA (Escondido) -->
+    <div id="modalFrota" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h2 class="text-xl font-bold mb-4">🚛 Cadastrar Veículo</h2>
+            <input type="text" id="novaPlaca" class="w-full p-2 border rounded mb-2 uppercase" placeholder="Placa (Ex: ABC-1234)">
+            <input type="text" id="novoModelo" class="w-full p-2 border rounded mb-4" placeholder="Modelo (Ex: Scania R450)">
+            
+            <button onclick="salvarVeiculo()" class="w-full bg-green-600 text-white p-2 rounded font-bold mb-2">SALVAR</button>
+            
+            <div class="border-t pt-2 mt-2">
+                <p class="text-xs font-bold text-gray-500 mb-2">Veículos Cadastrados:</p>
+                <ul id="listaFrotaModal" class="text-sm text-gray-700 max-h-32 overflow-y-auto"></ul>
+            </div>
+
+            <button onclick="toggleModalFrota()" class="w-full mt-4 text-red-500 text-sm hover:underline">Fechar</button>
+        </div>
     </div>
 
     <script>
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
-
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
 
         window.onload = function() {
-            let senha = prompt("Senha Admin:");
-            if(senha !== "1234") return;
+            if(prompt("Senha Admin:") !== "1234") return;
             carregarDados();
         }
 
         async function carregarDados() {
             const container = document.getElementById('lista-checklists');
+            const { data, error } = await meuSupabase.from('checklists').select('*').order('created_at', { ascending: false }).limit(50);
             
-            const { data, error } = await meuSupabase
-                .from('checklists')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(50);
-
             if (error) { alert("Erro"); return; }
-
             container.innerHTML = '';
 
             data.forEach(item => {
                 const dataF = new Date(item.created_at).toLocaleString('pt-BR');
-                // Trata campos antigos que podem estar vazios
                 const km = item.km || "---";
-                const comb = item.combustivel || "---";
-                const obs = item.observacao || "Sem observações.";
-
-                const corStatus = item.pneu_ok ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800 animate-pulse";
-                const textoStatus = item.pneu_ok ? "APROVADO" : "FALHA";
-                const dadosPDF = encodeURIComponent(JSON.stringify(item));
-
                 const card = `
-                    <div class="bg-white rounded-lg shadow border border-gray-200 p-4 hover:shadow-lg transition">
-                        <div class="flex flex-col md:flex-row gap-4">
-                            
-                            <!-- Foto Thumbnail -->
-                            <div class="w-full md:w-32 h-32 flex-shrink-0">
-                                <a href="${item.foto_url}" target="_blank">
-                                    <img src="${item.foto_url}" class="w-full h-full object-cover rounded-md border">
-                                </a>
-                            </div>
-
-                            <!-- Dados -->
-                            <div class="flex-1 space-y-2">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="font-bold text-xl text-slate-800">${item.placa}</h3>
-                                        <p class="text-sm text-gray-500">${item.motorista}</p>
-                                    </div>
-                                    <span class="text-xs font-bold px-3 py-1 rounded-full ${corStatus}">${textoStatus}</span>
-                                </div>
-
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-2 bg-gray-50 p-2 rounded">
-                                    <div><span class="block text-gray-400 text-xs">KM</span><b>${km}</b></div>
-                                    <div><span class="block text-gray-400 text-xs">TANQUE</span><b>${comb}</b></div>
-                                    <div><span class="block text-gray-400 text-xs">DATA</span><b>${dataF.split(' ')[0]}</b></div>
-                                    <div><span class="block text-gray-400 text-xs">HORA</span><b>${dataF.split(' ')[1]}</b></div>
-                                </div>
-
-                                <p class="text-xs text-gray-500 italic border-l-2 border-gray-300 pl-2">"${obs}"</p>
-                            </div>
-
-                            <!-- Ações -->
-                            <div class="flex md:flex-col justify-center gap-2">
-                                <a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" class="px-4 py-2 bg-blue-50 text-blue-600 rounded text-sm font-bold text-center hover:bg-blue-100">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                </a>
-                                <button onclick="gerarPDF('${dadosPDF}')" class="px-4 py-2 bg-slate-800 text-white rounded text-sm font-bold hover:bg-slate-700">
-                                    <i class="fas fa-file-pdf"></i> PDF
-                                </button>
-                            </div>
+                    <div class="bg-white rounded-lg shadow border p-4 hover:shadow-lg transition flex flex-col md:flex-row gap-4">
+                        <div class="w-full md:w-32 h-32 flex-shrink-0">
+                            <a href="${item.foto_url}" target="_blank"><img src="${item.foto_url}" class="w-full h-full object-cover rounded border"></a>
                         </div>
-                    </div>
-                `;
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h3 class="font-bold text-xl">${item.placa}</h3>
+                                <span class="px-2 py-1 rounded text-xs font-bold ${item.pneu_ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${item.pneu_ok ? 'APROVADO' : 'FALHA'}</span>
+                            </div>
+                            <p class="text-sm text-gray-500">${item.motorista} • ${dataF}</p>
+                            <p class="text-xs font-bold text-gray-600 mt-2">KM: ${km} | TANQUE: ${item.combustivel || '--'}</p>
+                        </div>
+                        <div class="flex md:flex-col gap-2 justify-center">
+                            <a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" class="px-3 py-2 bg-blue-50 text-blue-600 rounded text-center"><i class="fas fa-map-marker-alt"></i></a>
+                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(item))}')" class="px-3 py-2 bg-slate-800 text-white rounded"><i class="fas fa-file-pdf"></i></button>
+                        </div>
+                    </div>`;
                 container.innerHTML += card;
             });
         }
 
-        function gerarPDF(dadosString) {
-            const item = JSON.parse(decodeURIComponent(dadosString));
-            const dataF = new Date(item.created_at).toLocaleString('pt-BR');
-            const km = item.km || "---";
-            const comb = item.combustivel || "---";
+        // --- GESTÃO DE FROTA ---
+        function toggleModalFrota() {
+            const modal = document.getElementById('modalFrota');
+            modal.classList.toggle('hidden');
+            if(!modal.classList.contains('hidden')) carregarListaFrota();
+        }
 
-            const janela = window.open('', '', 'width=800,height=900');
-            janela.document.write(`
-                <html>
-                <body style="font-family: sans-serif; padding: 40px; color: #333;">
-                    <div style="text-align: center; border-bottom: 2px solid #333; margin-bottom: 30px;">
-                        <h1 style="margin:0;">RELATÓRIO DE VISTORIA</h1>
-                        <p style="color: #666;">ID: ${item.id} | Data: ${dataF}</p>
-                    </div>
+        async function carregarListaFrota() {
+            const lista = document.getElementById('listaFrotaModal');
+            const { data } = await meuSupabase.from('frota').select('*').order('placa');
+            lista.innerHTML = '';
+            data.forEach(v => {
+                lista.innerHTML += `<li class="border-b py-1 flex justify-between"><span>${v.placa}</span> <button onclick="deletarVeiculo(${v.id})" class="text-red-500 text-xs">Excluir</button></li>`;
+            });
+        }
 
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">PLACA</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${item.placa}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">MOTORISTA</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${item.motorista}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">ODÔMETRO</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${km} Km</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">COMBUSTÍVEL</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${comb}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">STATUS PNEU</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${item.pneu_ok ? 'OK' : 'FALHA'}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; font-weight: bold;">GPS</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${item.latitude}, ${item.longitude}</td>
-                        </tr>
-                    </table>
+        async function salvarVeiculo() {
+            const placa = document.getElementById('novaPlaca').value.toUpperCase();
+            const modelo = document.getElementById('novoModelo').value;
+            if(!placa) return alert("Digite a placa!");
 
-                    <div style="margin-bottom: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 5px;">
-                        <strong>Observações:</strong> ${item.observacao || "Nenhuma"}
-                    </div>
+            const { error } = await meuSupabase.from('frota').insert({ placa, modelo });
+            if(error) alert("Erro ao salvar");
+            else {
+                alert("Veículo salvo!");
+                document.getElementById('novaPlaca').value = '';
+                document.getElementById('novoModelo').value = '';
+                carregarListaFrota();
+            }
+        }
 
-                    <div style="text-align: center; border: 2px solid #eee; padding: 10px;">
-                        <p style="font-size: 10px; font-weight: bold; color: #999;">EVIDÊNCIA FOTOGRÁFICA</p>
-                        <img src="${item.foto_url}" style="max-width: 100%; max-height: 400px; border-radius: 5px;">
-                    </div>
+        async function deletarVeiculo(id) {
+            if(!confirm("Tem certeza?")) return;
+            await meuSupabase.from('frota').delete().match({ id });
+            carregarListaFrota();
+        }
 
-                    <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ccc; padding-top: 10px;">
-                        Documento Oficial - Gerado via Sistema Web
-                    </div>
-                    <script>setTimeout(() => { window.print(); }, 1000);<\/script>
-                </body>
-                </html>
-            `);
+        function gerarPDF(d) {
+            const i = JSON.parse(decodeURIComponent(d));
+            const w = window.open('', '', 'width=800,height=900');
+            w.document.write(`<html><body style="font-family:sans-serif;padding:40px;text-align:center;"><h1>VISTORIA #${i.id}</h1><p>Veículo: ${i.placa} | Motorista: ${i.motorista}</p><p>Data: ${new Date(i.created_at).toLocaleString()}</p><img src="${i.foto_url}" style="max-width:100%;max-height:500px;margin-top:20px;"><script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
         }
     </script>
 </body>
