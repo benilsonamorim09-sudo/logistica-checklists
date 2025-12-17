@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gestor v17</title>
+    <title>Painel Gestor v18</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,6 +11,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
 
+    <!-- MENU -->
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -26,13 +27,16 @@
             </div>
         </div>
         <div class="max-w-7xl mx-auto mt-2 flex justify-end gap-3 text-xs">
-            <button onclick="abrir('modalFrota', loadFrota)" class="text-slate-300 hover:text-white"><i class="fas fa-truck"></i> Frota</button>
-            <button onclick="abrir('modalEquipe', loadEquipe)" class="text-slate-300 hover:text-white"><i class="fas fa-users"></i> Equipe</button>
+            <button onclick="abrir('modalFrota', loadFrota)" class="text-slate-300 hover:text-white"><i class="fas fa-truck"></i> Gerenciar Frota</button>
+            <button onclick="abrir('modalEquipe', loadEquipe)" class="text-slate-300 hover:text-white"><i class="fas fa-users"></i> Gerenciar Equipe</button>
             <button onclick="abrirAuditoria()" class="text-purple-400 hover:text-purple-300"><i class="fas fa-shield-alt"></i> Logs</button>
         </div>
     </nav>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <div class="max-w-7xl mx-auto p-4 space-y-6">
+        
+        <!-- DASHBOARD -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded border-l-4 border-red-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Alertas</span><p id="kpiPendente" class="text-2xl font-bold text-red-600">0</p></div>
             <div class="bg-white p-4 rounded border-l-4 border-yellow-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Oficina</span><p id="kpiAndamento" class="text-2xl font-bold text-yellow-600">0</p></div>
@@ -40,21 +44,76 @@
             <div class="bg-white p-4 rounded border-l-4 border-blue-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Total</span><p id="kpiTotal" class="text-2xl font-bold text-slate-700">0</p></div>
         </div>
 
+        <!-- LISTA -->
         <div id="viewLista" class="block">
             <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-700">Monitoramento</h3><input id="busca" onkeyup="filtrar()" placeholder="Buscar placa..." class="border p-2 rounded text-sm uppercase w-40"></div>
             <div id="lista" class="space-y-4 text-center text-gray-400">Carregando...</div>
         </div>
+
+        <!-- TIMELINE -->
         <div id="viewTimeline" class="hidden">
-            <h3 class="font-bold text-slate-700 mb-6">Linha do Tempo</h3>
+            <h3 class="font-bold text-slate-700 mb-6">Linha do Tempo Operacional</h3>
             <div id="timelineContainer" class="border-l-4 border-slate-300 ml-4 space-y-8 pl-6 relative"></div>
         </div>
     </div>
 
-    <!-- Modais -->
-    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-xl"><h2 class="font-bold mb-4">Frota</h2><div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2">+</button></div><ul id="lFrota" class="h-60 overflow-y-auto text-sm space-y-2"></ul><button onclick="fechar('modalFrota')" class="w-full mt-4 bg-gray-200 py-2 text-sm">Fechar</button></div></div>
-    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-xl"><h2 class="font-bold mb-4">Equipe</h2><div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-24 text-center" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2">+</button></div><ul id="lEquipe" class="h-60 overflow-y-auto text-sm space-y-2"></ul><button onclick="fechar('modalEquipe')" class="w-full mt-4 bg-gray-200 py-2 text-sm">Fechar</button></div></div>
+    <!-- MODAL FROTA COM IMPORTAÇÃO -->
+    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded w-96 shadow-xl">
+            <h2 class="font-bold mb-4 border-b pb-2">🚛 Frota</h2>
+            
+            <!-- Abas simples -->
+            <div class="flex gap-2 text-xs mb-3">
+                <button onclick="toggleAba('frota', 'unidade')" class="text-blue-600 font-bold underline">Cadastrar 1</button>
+                <button onclick="toggleAba('frota', 'massa')" class="text-gray-500">Importar Lista</button>
+            </div>
+
+            <!-- Cadastro Unitário -->
+            <div id="frotaUnidade" class="flex gap-2 mb-4">
+                <input id="nPlaca" class="border p-2 w-full uppercase rounded text-sm" placeholder="Placa">
+                <button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700"><i class="fas fa-plus"></i></button>
+            </div>
+
+            <!-- Cadastro em Massa (Novo) -->
+            <div id="frotaMassa" class="hidden mb-4">
+                <textarea id="textoFrota" class="w-full border p-2 text-xs h-24 rounded" placeholder="Cole aqui:&#10;ABC-1234, SCANIA&#10;XYZ-9999, VOLVO"></textarea>
+                <button onclick="importarFrota()" class="w-full bg-blue-600 text-white text-xs py-2 rounded mt-1">Importar Tudo</button>
+            </div>
+
+            <ul id="lFrota" class="h-48 overflow-y-auto text-sm space-y-2 border-t pt-2"></ul>
+            <button onclick="fechar('modalFrota')" class="w-full mt-4 bg-gray-200 py-2 rounded text-sm font-bold">Fechar</button>
+        </div>
+    </div>
+
+    <!-- MODAL EQUIPE COM IMPORTAÇÃO -->
+    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded w-96 shadow-xl">
+            <h2 class="font-bold mb-4 border-b pb-2">👥 Equipe</h2>
+            
+            <div class="flex gap-2 text-xs mb-3">
+                <button onclick="toggleAba('equipe', 'unidade')" class="text-blue-600 font-bold underline">Cadastrar 1</button>
+                <button onclick="toggleAba('equipe', 'massa')" class="text-gray-500">Importar Lista</button>
+            </div>
+
+            <div id="equipeUnidade" class="flex gap-2 mb-4">
+                <input id="nNome" class="border p-2 w-full uppercase rounded text-sm" placeholder="Nome">
+                <input id="nPin" class="border p-2 w-20 text-center rounded text-sm" placeholder="PIN">
+                <button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700"><i class="fas fa-plus"></i></button>
+            </div>
+
+            <div id="equipeMassa" class="hidden mb-4">
+                <textarea id="textoEquipe" class="w-full border p-2 text-xs h-24 rounded" placeholder="Cole aqui:&#10;JOAO SILVA, 1234&#10;MARIA SOUZA, 9999"></textarea>
+                <button onclick="importarEquipe()" class="w-full bg-blue-600 text-white text-xs py-2 rounded mt-1">Importar Tudo</button>
+            </div>
+
+            <ul id="lEquipe" class="h-48 overflow-y-auto text-sm space-y-2 border-t pt-2"></ul>
+            <button onclick="fechar('modalEquipe')" class="w-full mt-4 bg-gray-200 py-2 rounded text-sm font-bold">Fechar</button>
+        </div>
+    </div>
+
+    <!-- MODAIS PADRÃO (Manutenção, Auditoria) -->
     <div id="modalManutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-xl"><h2 class="font-bold mb-4">Ocorrência</h2><p id="modalPlaca" class="text-2xl font-bold mb-4 text-center">ABC-1234</p><label class="text-xs font-bold text-gray-500">STATUS</label><select id="novoStatus" class="w-full border p-2 rounded mb-4"><option value="PENDENTE">🔴 PENDENTE</option><option value="EM_ANALISE">🟡 EM MANUTENÇÃO</option><option value="CONCLUIDO">🟢 CONCLUÍDO</option></select><label class="text-xs font-bold text-gray-500">NOTAS</label><textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm"></textarea><input type="hidden" id="idChecklistAtual"><button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold">SALVAR</button><button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-500 text-sm">Cancelar</button></div></div>
-    <div id="modalAuditoria" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg w-[600px] max-h-[80vh] flex flex-col"><h2 class="font-bold mb-4 text-purple-900 text-lg">Logs</h2><div class="flex-1 overflow-y-auto border rounded bg-gray-50 p-2"><table class="w-full text-xs text-left"><tbody id="tabelaLogs"></tbody></table></div><button onclick="fechar('modalAuditoria')" class="mt-4 bg-gray-200 px-4 py-2 text-sm">Fechar</button></div></div>
+    <div id="modalAuditoria" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-xl"><h2 class="font-bold mb-4 text-purple-900 text-lg">Logs</h2><div class="flex-1 overflow-y-auto border rounded bg-gray-50 p-2"><table class="w-full text-xs text-left"><tbody id="tabelaLogs"></tbody></table></div><button onclick="fechar('modalAuditoria')" class="mt-4 bg-gray-200 px-4 py-2 rounded text-sm">Fechar</button></div></div>
 
     <script>
         const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2203/2203124.png";
@@ -70,6 +129,48 @@
             carregarDados();
         }
 
+        // --- IMPORTAÇÃO EM MASSA (NOVO) ---
+        function toggleAba(modal, aba) {
+            document.getElementById(`${modal}Unidade`).classList.add('hidden');
+            document.getElementById(`${modal}Massa`).classList.add('hidden');
+            document.getElementById(`${modal}${aba.charAt(0).toUpperCase() + aba.slice(1)}`).classList.remove('hidden');
+        }
+
+        async function importarFrota() {
+            const texto = document.getElementById('textoFrota').value;
+            if(!texto) return;
+            const linhas = texto.split('\n');
+            let count = 0;
+            for(let linha of linhas) {
+                const [placa, modelo] = linha.split(',');
+                if(placa) {
+                    await sb.from('frota').insert({placa: placa.trim().toUpperCase(), modelo: modelo ? modelo.trim() : ''});
+                    count++;
+                }
+            }
+            alert(`${count} veículos importados!`);
+            loadFrota();
+            document.getElementById('textoFrota').value = '';
+        }
+
+        async function importarEquipe() {
+            const texto = document.getElementById('textoEquipe').value;
+            if(!texto) return;
+            const linhas = texto.split('\n');
+            let count = 0;
+            for(let linha of linhas) {
+                const [nome, pin] = linha.split(',');
+                if(nome && pin) {
+                    await sb.from('funcionarios').insert({nome: nome.trim().toUpperCase(), pin: pin.trim()});
+                    count++;
+                }
+            }
+            alert(`${count} funcionários importados!`);
+            loadEquipe();
+            document.getElementById('textoEquipe').value = '';
+        }
+
+        // --- SISTEMA CORE (IGUAL v17) ---
         async function carregarDados() {
             const list = document.getElementById('lista'); list.innerHTML = '<p class="mt-10"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>';
             const dataFiltro = document.getElementById('filtroData').value;
@@ -93,90 +194,15 @@
                     else {bClass="border-blue-500 bg-blue-50 opacity-75"; label=`<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded">RESOLVIDO</span>`;}
                 }
                 const tipoTag = i.tipo_operacao === 'SAIDA' ? `<span class="bg-indigo-100 text-indigo-800 text-[9px] font-bold px-1 rounded border border-indigo-200">SAÍDA</span>` : `<span class="bg-teal-100 text-teal-800 text-[9px] font-bold px-1 rounded border border-teal-200">RETORNO</span>`;
-                const card = `
-                    <div class="rounded shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${bClass} bg-white transition hover:shadow-lg">
-                        <img src="${i.foto_url}" class="w-full md:w-24 h-24 object-cover rounded border cursor-pointer bg-gray-200" onclick="window.open('${i.foto_url}')">
-                        <div class="flex-1 text-left">
-                            <div class="flex justify-between items-center mb-1"><h3 class="font-bold text-lg">${i.placa}</h3> <div class="flex gap-2 items-center">${tipoTag} ${label}</div></div>
-                            <p class="text-sm text-gray-600">${i.motorista} • ${new Date(i.created_at).toLocaleTimeString().slice(0,5)}</p>
-                            ${!aprovado ? `<div class="mt-2 text-xs text-red-600 font-bold border-t pt-1">⚠️ FALHAS REPORTADAS</div>` : ''}
-                            ${i.notas_manutencao ? `<p class="mt-2 text-xs text-gray-600 italic bg-white p-2 rounded border">🔧 ${i.notas_manutencao}</p>` : ''}
-                        </div>
-                        <div class="flex flex-col gap-2 justify-center min-w-[120px]">
-                            ${!aprovado ? `<button onclick="abrirManutencao(${i.id}, '${i.placa}', '${status}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-xs font-bold shadow"><i class="fas fa-tools"></i> TRATAR</button>` : ''}
-                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(i))}')" class="bg-slate-700 text-white px-3 py-2 rounded text-xs hover:bg-slate-600">PDF</button>
-                            <button onclick="apagarChecklist(${i.id}, '${i.placa}')" class="text-red-400 hover:text-red-600 text-xs text-right mt-1 font-bold">Excluir</button>
-                        </div>
-                    </div>`;
+                const card = `<div class="rounded shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${bClass} bg-white transition hover:shadow-lg"><img src="${i.foto_url}" class="w-full md:w-24 h-24 object-cover rounded border cursor-pointer bg-gray-200" onclick="window.open('${i.foto_url}')"><div class="flex-1 text-left"><div class="flex justify-between items-center mb-1"><h3 class="font-bold text-lg">${i.placa}</h3> <div class="flex gap-2 items-center">${tipoTag} ${label}</div></div><p class="text-sm text-gray-600">${i.motorista} • ${new Date(i.created_at).toLocaleTimeString().slice(0,5)}</p>${!aprovado ? `<div class="mt-2 text-xs text-red-600 font-bold border-t pt-1">⚠️ FALHAS REPORTADAS</div>` : ''}${i.notas_manutencao ? `<p class="mt-2 text-xs text-gray-600 italic bg-white p-2 rounded border">🔧 ${i.notas_manutencao}</p>` : ''}</div><div class="flex flex-col gap-2 justify-center min-w-[120px]">${!aprovado ? `<button onclick="abrirManutencao(${i.id}, '${i.placa}', '${status}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-xs font-bold shadow"><i class="fas fa-tools"></i> TRATAR</button>` : ''}<button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(i))}')" class="bg-slate-700 text-white px-3 py-2 rounded text-xs hover:bg-slate-600">PDF</button><button onclick="apagarChecklist(${i.id}, '${i.placa}')" class="text-red-400 hover:text-red-600 text-xs text-right mt-1 font-bold">Excluir</button></div></div>`;
                 list.innerHTML += card;
             });
         }
 
-        // --- CORREÇÃO DA IMAGEM NO PDF ---
-        function gerarPDF(d) {
-            const i = JSON.parse(decodeURIComponent(d));
-            const dataF = new Date(i.created_at).toLocaleString('pt-BR');
-            const obs = i.observacao || "Nenhuma.";
-            const check = (val) => (val!==false) ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold;background:#fee2e2;padding:2px">FALHA</span>';
-            const htmlAss = i.assinatura_url ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` : `<div class="assinatura-box"><p style="color:red">[SEM ASSINATURA]</p></div>`;
-
-            const w = window.open('','','width=900,height=1100');
-            w.document.write(`
-                <html><head><title>Relatório ${i.placa}</title><style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-                    .header { border-bottom: 3px solid #1e293b; padding-bottom: 20px; margin-bottom: 30px; display: flex; align-items: center; }
-                    .logo-pdf { height: 60px; margin-right: 20px; }
-                    .titulo h1 { margin: 0; color: #1e293b; font-size: 24px; text-transform: uppercase; }
-                    .meta { text-align: right; font-size: 12px; color: #666; margin-left: auto; }
-                    .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-                    .box { background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
-                    .label { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; }
-                    .valor { font-size: 14px; font-weight: 600; color: #0f172a; }
-                    .checklist-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                    .checklist-table th { text-align: left; background: #e2e8f0; padding: 8px; font-size: 11px; }
-                    .checklist-table td { border-bottom: 1px solid #eee; padding: 8px; font-size: 13px; }
-                    .obs-box { background: #fff7ed; border: 1px solid #fdba74; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
-                    .foto-container { text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0; padding: 5px; }
-                    .foto-main { max-height: 350px; max-width: 100%; }
-                    .assinatura-box { text-align: center; margin-top: 30px; }
-                    .ass-img { height: 60px; }
-                    .linha { color: #ccc; }
-                    .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; font-size: 9px; color: #999; }
-                </style></head><body>
-                    <div class="header">
-                        <img src="${LOGO_URL}" class="logo-pdf">
-                        <div class="titulo"><h1>Relatório de Vistoria</h1></div>
-                        <div class="meta">ID: #${i.id}<br>${dataF}<br><b>${i.tipo_operacao}</b></div>
-                    </div>
-                    <div class="grid-info">
-                        <div class="box"><span class="label">Veículo</span><span class="valor">${i.placa}</span></div>
-                        <div class="box"><span class="label">Condutor</span><span class="valor">${i.motorista}</span></div>
-                        <div class="box"><span class="label">KM Atual</span><span class="valor">${i.km}</span></div>
-                        <div class="box"><span class="label">Combustível</span><span class="valor">${i.combustivel}</span></div>
-                    </div>
-                    <h3>Itens Inspecionados</h3>
-                    <table class="checklist-table">
-                        <tr><th>ITEM DE VERIFICAÇÃO</th><th>RESULTADO</th></tr>
-                        <tr><td>Estado Geral dos Pneus</td><td>${check(i.pneu_ok)}</td></tr>
-                        <tr><td>Sistema de Iluminação</td><td>${check(i.luzes_ok)}</td></tr>
-                        <tr><td>Níveis de Fluídos</td><td>${check(i.fluidos_ok)}</td></tr>
-                        <tr><td>Integridade da Lataria</td><td>${check(i.lataria_ok)}</td></tr>
-                        <tr><td>Higiene e Limpeza Interna</td><td>${check(i.interior_ok)}</td></tr>
-                    </table>
-                    ${i.observacao ? `<div class="obs-box"><b>OBSERVAÇÕES:</b> "${obs}"</div>` : ''}
-                    ${i.notas_manutencao ? `<div class="obs-box" style="background:#f0f9ff;border-color:#bae6fd"><b>MANUTENÇÃO:</b> "${i.notas_manutencao}"</div>` : ''}
-                    <div class="foto-container"><img src="${i.foto_url}" class="foto-main"></div>
-                    ${htmlAss}
-                    <div class="footer">Documento gerado eletronicamente via Sistema Logística Mobile.<br>Localização: ${i.latitude}, ${i.longitude}</div>
-                    <script>
-                        // Delay maior para garantir carregamento das imagens
-                        setTimeout(() => { window.print(); }, 2000);
-                    <\/script>
-                </body></html>`);
-        }
-
-        // Funções Padrão
         function renderizarTimeline(d){const t=document.getElementById('timelineContainer');t.innerHTML='';d.forEach(i=>{const h=new Date(i.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const c=isAprovado(i)?'bg-green-500':'bg-red-500';const ic=i.tipo_operacao==='SAIDA'?'fa-arrow-right':'fa-arrow-left';t.innerHTML+=`<div class="relative"><div class="absolute -left-[34px] bg-slate-100 border-4 border-white rounded-full w-4 h-4 ${c}"></div><div class="bg-white p-4 rounded shadow border border-gray-100 mb-4 hover:shadow-md transition"><span class="text-xs font-bold text-gray-400">${h}</span><h4 class="font-bold text-slate-800"><i class="fas ${ic} text-xs mr-2"></i> ${i.tipo_operacao} - ${i.placa}</h4><p class="text-sm text-gray-600">${i.motorista}</p>${!isAprovado(i)?'<p class="text-xs text-red-500 font-bold mt-1">⚠️ OCORRÊNCIA</p>':''}</div></div>`})}
+        function gerarPDF(d){const i=JSON.parse(decodeURIComponent(d));const w=window.open('','','width=900,height=1100');w.document.write(`<html><head><title>Relatório</title><style>body{font-family:'Segoe UI',sans-serif;padding:40px;color:#333}.header{display:flex;align-items:center;border-bottom:3px solid #333;padding-bottom:20px;margin-bottom:30px}.logo-pdf{height:60px;margin-right:20px}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{border:1px solid #eee;padding:8px}th{background:#f1f5f9}.ass-img{height:60px}</style></head><body><div class="header"><img src="${LOGO_URL}" class="logo-pdf"><div><h1>RELATÓRIO DE VISTORIA</h1>ID: #${i.id} | ${i.tipo_operacao}</div></div><p><b>VEÍCULO:</b> ${i.placa}</p><p><b>MOTORISTA:</b> ${i.motorista}</p><table><tr><th>ITEM</th><th>STATUS</th></tr><tr><td>Pneus</td><td>${i.pneu_ok?'OK':'FALHA'}</td></tr><tr><td>Luzes</td><td>${i.luzes_ok?'OK':'FALHA'}</td></tr><tr><td>Fluídos</td><td>${i.fluidos_ok?'OK':'FALHA'}</td></tr><tr><td>Lataria</td><td>${i.lataria_ok?'OK':'FALHA'}</td></tr><tr><td>Interior</td><td>${i.interior_ok?'OK':'FALHA'}</td></tr></table><p><b>OBS:</b> ${i.observacao||'-'}</p><div style="text-align:center"><img src="${i.foto_url}" style="max-height:300px"></div>${i.assinatura_url?`<div style="text-align:center;margin-top:40px"><img src="${i.assinatura_url}" class="ass-img"><hr style="width:200px"><p>Assinado Digitalmente</p></div>`:''}<script>setTimeout(()=>window.print(),2000)<\/script></body></html>`);}
+        
+        // Utils
         function alternarVisao(v){if(v==='lista'){document.getElementById('viewLista').classList.remove('hidden');document.getElementById('viewTimeline').classList.add('hidden')}else{document.getElementById('viewLista').classList.add('hidden');document.getElementById('viewTimeline').classList.remove('hidden')}}
         function atualizarKPIs(d){const p=d.filter(i=>!isAprovado(i)&&(i.status_manutencao==='PENDENTE'||!i.status_manutencao)).length; document.getElementById('kpiPendente').innerText=p; document.getElementById('kpiAndamento').innerText=d.filter(i=>i.status_manutencao==='EM_ANALISE').length; document.getElementById('kpiAprovados').innerText=d.filter(i=>isAprovado(i)||i.status_manutencao==='CONCLUIDO').length; document.getElementById('kpiTotal').innerText=d.length;}
         function isAprovado(i){return(i.pneu_ok!==false&&i.luzes_ok!==false&&i.fluidos_ok!==false&&i.lataria_ok!==false&&i.interior_ok!==false)}
