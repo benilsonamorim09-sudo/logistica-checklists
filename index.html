@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Logística v10</title>
+    <title>Checklist Operacional v11</title>
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,31 +14,31 @@
 <body class="bg-gray-100 min-h-screen pb-10">
 
     <!-- TELA LOGIN -->
-    <div id="telaLogin" class="fixed inset-0 bg-blue-900 z-50 flex flex-col items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center">
+    <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
             
-            <!-- SUA LOGO AQUI -->
-            <img src="" class="w-32 mx-auto mb-6 logo-img">
+            <!-- NOVA LOGO FUNCIONAL -->
+            <img src="" class="w-24 h-24 mx-auto mb-6 logo-img object-contain">
             
-            <h1 class="text-xl font-bold text-blue-900 mb-1">ACESSO MOTORISTA</h1>
-            <p class="text-gray-400 text-xs mb-6">Identifique-se para iniciar</p>
+            <h1 class="text-xl font-bold text-slate-800 mb-1">ACESSO OPERACIONAL</h1>
+            <p class="text-gray-400 text-xs mb-8">Sistema de Checklist Logístico</p>
 
             <div class="text-left mb-4">
-                <label class="text-xs font-bold text-gray-500 uppercase">Colaborador</label>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Motorista</label>
                 <div class="relative">
-                    <select id="loginUsuario" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-lg font-bold appearance-none">
+                    <select id="loginUsuario" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-lg font-bold appearance-none text-slate-700">
                         <option value="">Carregando...</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">▼</div>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div>
                 </div>
             </div>
 
-            <div class="text-left mb-6">
-                <label class="text-xs font-bold text-gray-500 uppercase">PIN</label>
-                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border border-gray-300 rounded-lg text-center text-3xl tracking-[0.5em] font-bold" placeholder="••••">
+            <div class="text-left mb-8">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Senha (PIN)</label>
+                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border border-slate-200 rounded-lg text-center text-3xl tracking-[0.5em] font-bold text-slate-800" placeholder="••••">
             </div>
 
-            <button onclick="fazerLogin()" class="w-full bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">ENTRAR</button>
+            <button onclick="fazerLogin()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">INICIAR TURNO</button>
         </div>
     </div>
 
@@ -49,7 +49,7 @@
             <div class="flex items-center gap-3">
                 <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
                 <div>
-                    <h1 class="font-bold text-xl leading-none">CHECKLIST</h1>
+                    <h1 class="font-bold text-lg leading-none">CHECKLIST</h1>
                     <p id="labelMotorista" class="text-blue-200 text-xs mt-1">Motorista...</p>
                 </div>
             </div>
@@ -58,106 +58,91 @@
 
         <div class="p-4 space-y-5 max-w-md mx-auto -mt-4">
             
-            <!-- 1. Veículo e Dados Básicos -->
+            <!-- 1. Veículo -->
             <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-truck mr-1"></i> Veículo e Dados</h3>
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-xs uppercase tracking-wide"><i class="fas fa-truck mr-1"></i> Identificação</h3>
                 
                 <div class="relative">
-                    <select id="placa" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-lg font-bold text-center uppercase appearance-none"><option value="">Carregando...</option></select>
+                    <select id="placa" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-xl font-bold text-center uppercase appearance-none text-blue-900"><option value="">Carregando...</option></select>
                     <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">KM</label>
-                        <input type="number" id="km" class="w-full p-2 border rounded font-bold" placeholder="0">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">KM Atual</label>
+                        <input type="number" id="km" class="w-full p-2 border rounded font-bold text-slate-700" placeholder="0">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase">Combustível</label>
-                        <select id="combustivel" class="w-full p-2 border rounded bg-white">
+                        <select id="combustivel" class="w-full p-2 border rounded bg-white text-slate-700">
                             <option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Reserva</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Itens de Inspeção (NOVOS CAMPOS) -->
+            <!-- 2. Inspeção Técnica -->
             <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase"><i class="fas fa-list-check mr-1"></i> Inspeção Técnica</h3>
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-xs uppercase tracking-wide"><i class="fas fa-tasks mr-1"></i> Itens de Segurança</h3>
                 
                 <div class="space-y-3">
-                    <!-- Pneus -->
-                    <div class="flex justify-between items-center">
-                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-circle-notch text-gray-400 mr-2"></i>Pneus</label>
-                        <select id="pneu_ok" class="border rounded p-1 w-32 text-sm font-bold">
-                            <option value="true">✅ OK</option><option value="false">❌ Falha</option>
-                        </select>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-circle-notch w-6 text-center text-blue-400"></i>Pneus</label>
+                        <select id="pneu_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
                     </div>
-                    <!-- Luzes -->
-                    <div class="flex justify-between items-center">
-                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-lightbulb text-gray-400 mr-2"></i>Luzes/Faróis</label>
-                        <select id="luzes_ok" class="border rounded p-1 w-32 text-sm font-bold">
-                            <option value="true">✅ OK</option><option value="false">❌ Falha</option>
-                        </select>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-lightbulb w-6 text-center text-yellow-500"></i>Luzes</label>
+                        <select id="luzes_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
                     </div>
-                    <!-- Fluídos -->
-                    <div class="flex justify-between items-center">
-                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-oil-can text-gray-400 mr-2"></i>Óleo/Água</label>
-                        <select id="fluidos_ok" class="border rounded p-1 w-32 text-sm font-bold">
-                            <option value="true">✅ OK</option><option value="false">❌ Falha</option>
-                        </select>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-oil-can w-6 text-center text-gray-500"></i>Fluídos</label>
+                        <select id="fluidos_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
                     </div>
-                    <!-- Lataria -->
-                    <div class="flex justify-between items-center">
-                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-car-crash text-gray-400 mr-2"></i>Lataria</label>
-                        <select id="lataria_ok" class="border rounded p-1 w-32 text-sm font-bold">
-                            <option value="true">✅ OK</option><option value="false">❌ Falha</option>
-                        </select>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-car-crash w-6 text-center text-red-400"></i>Lataria</label>
+                        <select id="lataria_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
                     </div>
-                    <!-- Interior -->
-                    <div class="flex justify-between items-center">
-                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-broom text-gray-400 mr-2"></i>Limpeza Int.</label>
-                        <select id="interior_ok" class="border rounded p-1 w-32 text-sm font-bold">
-                            <option value="true">✅ OK</option><option value="false">❌ Falha</option>
-                        </select>
+                    <div class="flex justify-between items-center py-1">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-broom w-6 text-center text-green-500"></i>Interior</label>
+                        <select id="interior_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
                     </div>
                 </div>
             </div>
 
             <!-- 3. Foto e Obs -->
             <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
-                <h3 class="text-blue-900 font-bold text-sm uppercase mb-2">3. Evidência</h3>
-                <label class="block w-full p-4 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition active:bg-blue-100">
-                    <i class="fas fa-camera text-2xl text-blue-400 mb-1"></i>
+                <h3 class="text-blue-900 font-bold text-xs uppercase mb-2">3. Evidência Visual</h3>
+                <label class="block w-full p-6 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition active:bg-blue-100 group">
+                    <i class="fas fa-camera text-2xl text-blue-400 mb-1 group-hover:scale-110 transition"></i>
                     <span class="block text-blue-800 font-bold text-xs">FOTO OBRIGATÓRIA</span>
                     <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="fotoTirada()">
                 </label>
-                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2">✅ Foto Capturada!</p>
-                <textarea id="observacao" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Observações (Opcional)"></textarea>
+                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2 bg-green-50 p-1 rounded">✅ Imagem carregada!</p>
+                <textarea id="observacao" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Observações sobre avarias..."></textarea>
             </div>
 
             <!-- 4. Assinatura -->
             <div class="bg-white p-4 rounded-xl shadow-md border-2 border-gray-100">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-blue-900 font-bold text-sm uppercase"><i class="fas fa-pen-nib"></i> Assinatura</h3>
-                    <button onclick="limparAssinatura()" class="bg-red-100 text-red-600 px-3 py-1 rounded text-[10px] font-bold hover:bg-red-200">LIMPAR</button>
+                    <h3 class="text-blue-900 font-bold text-xs uppercase"><i class="fas fa-pen-nib"></i> Assinatura Digital</h3>
+                    <button onclick="limparAssinatura()" class="bg-red-50 text-red-600 px-3 py-1 rounded text-[10px] font-bold border border-red-100">LIMPAR</button>
                 </div>
-                <div class="border-2 border-gray-300 rounded-lg overflow-hidden" style="height: 200px;">
-                    <canvas id="signature-pad" class="w-full h-full"></canvas>
+                <div class="border-2 border-gray-300 rounded-lg overflow-hidden relative bg-gray-50" style="height: 200px;">
+                    <p class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-200 text-4xl pointer-events-none opacity-50"><i class="fas fa-signature"></i></p>
+                    <canvas id="signature-pad" class="w-full h-full relative z-10"></canvas>
                 </div>
-                <p class="text-center text-[10px] text-gray-400 mt-1">Assine no quadro branco acima</p>
             </div>
 
             <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center">
-                <span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i>
+                <span>ENVIAR RELATÓRIO</span> <i class="fas fa-paper-plane"></i>
             </button>
-            <p id="status" class="text-center text-xs text-gray-400 mt-4 pb-4">v10.0</p>
+            <p id="status" class="text-center text-xs text-gray-400 mt-4 pb-4">Logística Pro v11.0</p>
         </div>
     </div>
 
     <script>
-        // --- SUA LOGO CONVERTIDA PARA LINK DIRETO ---
-        const LOGO_URL = "https://drive.google.com/uc?export=view&id=1vgsKlgy1zJV0BY1ecuBpMPcc0LATyDxV";
+        // --- LOGO DE PRANCHETA LOGÍSTICA (CDN CONFIÁVEL) ---
+        const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/10832/10832132.png";
 
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
@@ -172,7 +157,7 @@
             if(salvo) { motoristaAtual = salvo; entrarNoSistema(); }
         };
 
-        // Login / Logout
+        // --- LÓGICA DO SISTEMA ---
         async function carregarUsuarios() {
             const s = document.getElementById('loginUsuario');
             const { data } = await meuSupabase.from('funcionarios').select('*').order('nome');
@@ -195,7 +180,6 @@
         }
         function sair() { localStorage.removeItem('usuario_logado'); window.location.reload(); }
 
-        // Frota
         async function carregarFrota() {
             const s = document.getElementById('placa');
             const { data } = await meuSupabase.from('frota').select('*').order('placa');
@@ -203,7 +187,6 @@
         }
         function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
 
-        // Assinatura
         const canvas = document.getElementById('signature-pad');
         const ctx = canvas.getContext('2d');
         let writingMode = false;
@@ -223,7 +206,6 @@
         canvas.addEventListener('mousedown', start); canvas.addEventListener('mouseup', end); canvas.addEventListener('mousemove', move);
         function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-        // Envio
         async function enviarDados() {
             const btn = document.getElementById('btnEnviar');
             const status = document.getElementById('status');
@@ -231,7 +213,7 @@
             if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) 
                 return alert("Preencha Placa, KM e Foto!");
 
-            btn.disabled = true; btn.innerHTML = 'AGUARDE...'; btn.classList.add('opacity-50'); status.innerText = "Localizando...";
+            btn.disabled = true; btn.innerHTML = 'ENVIANDO...'; btn.classList.add('opacity-50'); status.innerText = "Localizando...";
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
@@ -246,14 +228,13 @@
                     await meuSupabase.storage.from('evidencias').upload(nomeAss, assBlob);
                     const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
 
-                    status.innerText = "Salvando dados...";
+                    status.innerText = "Salvando...";
                     await meuSupabase.from('checklists').insert({
                         placa: document.getElementById('placa').value,
                         motorista: motoristaAtual,
                         km: document.getElementById('km').value,
                         combustivel: document.getElementById('combustivel').value,
                         
-                        // NOVOS CAMPOS
                         pneu_ok: document.getElementById('pneu_ok').value === 'true',
                         luzes_ok: document.getElementById('luzes_ok').value === 'true',
                         fluidos_ok: document.getElementById('fluidos_ok').value === 'true',
@@ -274,4 +255,4 @@
         }
     </script>
 </body>
-</html>
+    </html>
