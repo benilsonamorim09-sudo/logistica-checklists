@@ -3,65 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin 360</title>
+    <title>Admin Logística v7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-lg">
+    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 class="font-bold text-lg"><i class="fas fa-user-shield text-blue-400 mr-2"></i>LOGÍSTICA <span class="text-slate-400">ADMIN</span></h1>
+            <h1 class="font-bold text-lg"><i class="fas fa-boxes text-blue-400 mr-2"></i>LOGÍSTICA <span class="text-slate-400">ADMIN</span></h1>
             
-            <div class="flex bg-slate-800 rounded p-1">
-                <input type="text" id="buscaPlaca" placeholder="Placa..." class="bg-transparent text-white px-2 outline-none uppercase w-24">
-                <button onclick="carregarDados()" class="px-2 text-blue-400"><i class="fas fa-search"></i></button>
+            <div class="flex bg-slate-800 rounded p-1 w-full md:w-auto">
+                <input id="busca" placeholder="Buscar Placa..." class="bg-transparent text-white px-2 outline-none uppercase w-full">
+                <button onclick="carregarDados()" class="px-3 text-blue-400"><i class="fas fa-search"></i></button>
             </div>
 
-            <div class="flex gap-2 text-sm">
-                <button onclick="abrirModal('modalFrota', carregarListaFrota)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-truck"></i> Frota</button>
-                <button onclick="abrirModal('modalEquipe', carregarListaEquipe)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-users"></i> Equipe</button>
+            <div class="flex gap-2 text-sm w-full md:w-auto justify-center">
+                <button onclick="abrir('modalFrota', loadFrota)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-truck"></i> Frota</button>
+                <button onclick="abrir('modalEquipe', loadEquipe)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-users"></i> Equipe</button>
+                <button onclick="carregarDados()" class="bg-green-700 px-3 py-1 rounded hover:bg-green-600"><i class="fas fa-sync"></i></button>
             </div>
         </div>
     </nav>
 
     <div class="max-w-7xl mx-auto p-4 space-y-6">
-        <div id="lista-checklists" class="space-y-4 text-center text-gray-400 mt-10">Carregando...</div>
+        <div id="lista" class="space-y-4 text-center text-gray-400 mt-10">Carregando dados...</div>
     </div>
 
-    <!-- MODAL FROTA -->
-    <div id="modalFrota" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50">
+    <!-- MODAIS DE CADASTRO -->
+    <div id="modalFrota" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4">🚛 Veículos</h2>
-            <div class="flex gap-2 mb-4">
-                <input id="novaPlaca" class="border p-2 w-full uppercase" placeholder="Placa">
-                <input id="novoModelo" class="border p-2 w-full" placeholder="Modelo">
-                <button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded">+</button>
-            </div>
-            <ul id="listaFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
-            <button onclick="fecharModal('modalFrota')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
+            <h2 class="font-bold mb-4">Gerenciar Frota</h2>
+            <div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded">+</button></div>
+            <ul id="lFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
+            <button onclick="fechar('modalFrota')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
         </div>
     </div>
 
-    <!-- MODAL EQUIPE (NOVO) -->
-    <div id="modalEquipe" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50">
+    <div id="modalEquipe" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4">👥 Motoristas</h2>
-            <div class="flex gap-2 mb-4">
-                <input id="novoNome" class="border p-2 w-full uppercase" placeholder="Nome">
-                <input id="novoPin" class="border p-2 w-20 text-center" placeholder="PIN" maxlength="4">
-                <button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded">+</button>
-            </div>
-            <ul id="listaEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
-            <button onclick="fecharModal('modalEquipe')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
+            <h2 class="font-bold mb-4">Gerenciar Equipe</h2>
+            <div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-20 text-center" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded">+</button></div>
+            <ul id="lEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
+            <button onclick="fechar('modalEquipe')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
         </div>
     </div>
 
     <script>
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
-        const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+        const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
 
         window.onload = function() {
             if(prompt("Senha Admin:") !== "1234") return;
@@ -69,73 +61,81 @@
         }
 
         async function carregarDados() {
-            const container = document.getElementById('lista-checklists');
-            const busca = document.getElementById('buscaPlaca').value.toUpperCase();
-            let q = meuSupabase.from('checklists').select('*').order('created_at', { ascending: false }).limit(50);
+            const list = document.getElementById('lista');
+            const busca = document.getElementById('busca').value.toUpperCase();
+            let q = sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(50);
             if(busca) q = q.ilike('placa', `%${busca}%`);
             
             const { data } = await q;
-            container.innerHTML = '';
-            data.forEach(item => {
-                const pdfData = encodeURIComponent(JSON.stringify(item));
+            list.innerHTML = '';
+            
+            if(data.length === 0) list.innerHTML = '<p class="text-gray-400">Nenhum registro.</p>';
+
+            data.forEach(i => {
+                const pdfData = encodeURIComponent(JSON.stringify(i));
                 const card = `
-                    <div class="bg-white rounded shadow p-4 flex gap-4 border border-gray-200">
-                        <img src="${item.foto_url}" class="w-20 h-20 object-cover rounded bg-gray-100" onclick="window.open('${item.foto_url}')">
+                    <div class="bg-white rounded shadow p-4 flex flex-col md:flex-row gap-4 border border-gray-200 hover:shadow-lg transition">
+                        <img src="${i.foto_url}" class="w-full md:w-24 h-24 object-cover rounded bg-gray-100 cursor-pointer" onclick="window.open('${i.foto_url}')">
                         <div class="flex-1">
-                            <div class="flex justify-between">
-                                <h3 class="font-bold text-lg">${item.placa}</h3>
-                                <span class="text-xs font-bold px-2 py-1 rounded ${item.pneu_ok?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">${item.pneu_ok?'OK':'FALHA'}</span>
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg text-slate-800">${i.placa}</h3>
+                                <span class="text-[10px] font-bold px-2 py-1 rounded ${i.pneu_ok?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">${i.pneu_ok?'OK':'FALHA'}</span>
                             </div>
-                            <p class="text-sm text-gray-600">${item.motorista}</p>
-                            <p class="text-xs text-gray-400 mt-1">${new Date(item.created_at).toLocaleString()}</p>
+                            <p class="text-sm text-gray-600">${i.motorista}</p>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(i.created_at).toLocaleString()}</p>
+                            <div class="mt-2 text-xs bg-gray-50 p-2 rounded flex gap-4">
+                                <span><b>KM:</b> ${i.km}</span> <span><b>TANQUE:</b> ${i.combustivel}</span>
+                            </div>
                         </div>
-                        <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 rounded h-10 self-center"><i class="fas fa-file-pdf"></i></button>
+                        <div class="flex md:flex-col gap-2 justify-center">
+                            <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 py-2 rounded text-sm hover:bg-slate-700"><i class="fas fa-file-pdf"></i> PDF</button>
+                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-center text-sm hover:bg-blue-100"><i class="fas fa-map-marker-alt"></i></a>
+                            <!-- BOTÃO DELETAR CHECKLIST -->
+                            <button onclick="apagarChecklist(${i.id})" class="bg-red-50 text-red-500 px-3 py-2 rounded text-sm hover:bg-red-100" title="Excluir Registro"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>`;
-                container.innerHTML += card;
+                list.innerHTML += card;
             });
         }
 
-        // --- GESTÃO DE MODAIS E CRUD ---
-        function abrirModal(id, callback) { document.getElementById(id).classList.remove('hidden'); if(callback) callback(); }
-        function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
+        async function apagarChecklist(id) {
+            if(!confirm("Tem certeza que deseja apagar este registro permanentemente?")) return;
+            const { error } = await sb.from('checklists').delete().match({id});
+            if(error) alert("Erro ao apagar");
+            else carregarDados();
+        }
 
-        // Frota
-        async function carregarListaFrota() {
-            const l = document.getElementById('listaFrota'); l.innerHTML = '';
-            const { data } = await meuSupabase.from('frota').select('*').order('placa');
-            data.forEach(v => l.innerHTML += `<li class="flex justify-between py-1 border-b"><span>${v.placa}</span> <button onclick="del('frota',${v.id},carregarListaFrota)" class="text-red-500">X</button></li>`);
+        // Modais
+        function abrir(id, cb) { document.getElementById(id).classList.remove('hidden'); if(cb) cb(); }
+        function fechar(id) { document.getElementById(id).classList.add('hidden'); }
+
+        async function loadFrota() {
+            const l = document.getElementById('lFrota'); l.innerHTML = '';
+            const { data } = await sb.from('frota').select('*').order('placa');
+            data.forEach(v => l.innerHTML += `<li class="flex justify-between py-1 border-b"><span>${v.placa}</span> <button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`);
         }
         async function addFrota() {
-            const placa = document.getElementById('novaPlaca').value.toUpperCase();
-            const modelo = document.getElementById('novoModelo').value;
-            if(placa) { await meuSupabase.from('frota').insert({placa, modelo}); carregarListaFrota(); document.getElementById('novaPlaca').value=''; }
+            const placa = document.getElementById('nPlaca').value.toUpperCase();
+            if(placa) { await sb.from('frota').insert({placa}); loadFrota(); document.getElementById('nPlaca').value=''; }
         }
 
-        // Equipe
-        async function carregarListaEquipe() {
-            const l = document.getElementById('listaEquipe'); l.innerHTML = '';
-            const { data } = await meuSupabase.from('funcionarios').select('*').order('nome');
-            data.forEach(u => l.innerHTML += `<li class="flex justify-between py-1 border-b"><span>${u.nome} (PIN: ${u.pin})</span> <button onclick="del('funcionarios',${u.id},carregarListaEquipe)" class="text-red-500">X</button></li>`);
+        async function loadEquipe() {
+            const l = document.getElementById('lEquipe'); l.innerHTML = '';
+            const { data } = await sb.from('funcionarios').select('*').order('nome');
+            data.forEach(u => l.innerHTML += `<li class="flex justify-between py-1 border-b"><span>${u.nome}</span> <button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`);
         }
         async function addEquipe() {
-            const nome = document.getElementById('novoNome').value.toUpperCase();
-            const pin = document.getElementById('novoPin').value;
-            if(nome && pin) { await meuSupabase.from('funcionarios').insert({nome, pin}); carregarListaEquipe(); document.getElementById('novoNome').value=''; }
+            const nome = document.getElementById('nNome').value.toUpperCase();
+            const pin = document.getElementById('nPin').value;
+            if(nome && pin) { await sb.from('funcionarios').insert({nome, pin}); loadEquipe(); document.getElementById('nNome').value=''; }
         }
 
-        async function del(tabela, id, callback) {
-            if(confirm("Excluir?")) { await meuSupabase.from(tabela).delete().match({id}); callback(); }
-        }
+        async function del(tab, id, cb) { if(confirm("Apagar?")) { await sb.from(tab).delete().match({id}); cb(); } }
 
-        // PDF (Simplificado para o código caber)
         function gerarPDF(d) {
             const i = JSON.parse(decodeURIComponent(d));
             const w = window.open('','','width=800,height=900');
-            w.document.write(`<html><body style="font-family:sans-serif;padding:30px;text-align:center;">
-                <h1>CHECKLIST #${i.id}</h1><p>${i.placa} - ${i.motorista}</p><p>Data: ${new Date(i.created_at).toLocaleString()}</p>
-                <p>Status: ${i.pneu_ok?'APROVADO':'REPROVADO'}</p><img src="${i.foto_url}" style="max-width:100%;max-height:400px;margin:20px 0;">
-                ${i.assinatura_url ? `<p>Assinado:</p><img src="${i.assinatura_url}" style="height:50px;">` : ''}
-                <script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
+            w.document.write(`<html><body style="font-family:sans-serif;padding:30px;text-align:center;"><h1>CHECKLIST #${i.id}</h1><p>${i.placa}</p><p>${new Date(i.created_at).toLocaleString()}</p><p>Status: ${i.pneu_ok?'OK':'FALHA'}</p><img src="${i.foto_url}" style="max-height:400px;margin:20px 0;">${i.assinatura_url ? `<br>Assinado:<br><img src="${i.assinatura_url}" style="height:50px;">` : ''}<script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
         }
     </script>
 </body>
