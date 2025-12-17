@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gestor v18</title>
+    <title>Painel Gestor Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,174 +11,25 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <!-- MENU -->
+    <!-- MENU SUPERIOR -->
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
-                <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-blue-400">CORP</span></h1>
-            </div>
-            <div class="flex gap-2 text-sm w-full md:w-auto justify-center items-center">
-                <input type="date" id="filtroData" onchange="carregarDados()" class="text-slate-800 rounded px-2 py-1 text-sm border-none outline-none">
-                <button onclick="alternarVisao('lista')" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-list"></i></button>
-                <button onclick="alternarVisao('timeline')" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-stream"></i></button>
-                <button onclick="exportarCSV()" class="bg-green-700 px-3 py-1 rounded hover:bg-green-600"><i class="fas fa-file-excel"></i></button>
-                <button onclick="carregarDados()" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-500"><i class="fas fa-sync"></i></button>
-            </div>
-        </div>
-        <div class="max-w-7xl mx-auto mt-2 flex justify-end gap-3 text-xs">
-            <button onclick="abrir('modalFrota', loadFrota)" class="text-slate-300 hover:text-white"><i class="fas fa-truck"></i> Gerenciar Frota</button>
-            <button onclick="abrir('modalEquipe', loadEquipe)" class="text-slate-300 hover:text-white"><i class="fas fa-users"></i> Gerenciar Equipe</button>
-            <button onclick="abrirAuditoria()" class="text-purple-400 hover:text-purple-300"><i class="fas fa-shield-alt"></i> Logs</button>
-        </div>
-    </nav>
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div class="max-w-7xl mx-auto p-4 space-y-6">
-        
-        <!-- DASHBOARD -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded border-l-4 border-red-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Alertas</span><p id="kpiPendente" class="text-2xl font-bold text-red-600">0</p></div>
-            <div class="bg-white p-4 rounded border-l-4 border-yellow-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Oficina</span><p id="kpiAndamento" class="text-2xl font-bold text-yellow-600">0</p></div>
-            <div class="bg-white p-4 rounded border-l-4 border-green-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Liberados</span><p id="kpiAprovados" class="text-2xl font-bold text-green-600">0</p></div>
-            <div class="bg-white p-4 rounded border-l-4 border-blue-500 shadow"><span class="text-[10px] font-bold text-gray-400 uppercase">Total</span><p id="kpiTotal" class="text-2xl font-bold text-slate-700">0</p></div>
-        </div>
-
-        <!-- LISTA -->
-        <div id="viewLista" class="block">
-            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-700">Monitoramento</h3><input id="busca" onkeyup="filtrar()" placeholder="Buscar placa..." class="border p-2 rounded text-sm uppercase w-40"></div>
-            <div id="lista" class="space-y-4 text-center text-gray-400">Carregando...</div>
-        </div>
-
-        <!-- TIMELINE -->
-        <div id="viewTimeline" class="hidden">
-            <h3 class="font-bold text-slate-700 mb-6">Linha do Tempo Operacional</h3>
-            <div id="timelineContainer" class="border-l-4 border-slate-300 ml-4 space-y-8 pl-6 relative"></div>
-        </div>
-    </div>
-
-    <!-- MODAL FROTA COM IMPORTAÇÃO -->
-    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded w-96 shadow-xl">
-            <h2 class="font-bold mb-4 border-b pb-2">🚛 Frota</h2>
-            
-            <!-- Abas simples -->
-            <div class="flex gap-2 text-xs mb-3">
-                <button onclick="toggleAba('frota', 'unidade')" class="text-blue-600 font-bold underline">Cadastrar 1</button>
-                <button onclick="toggleAba('frota', 'massa')" class="text-gray-500">Importar Lista</button>
-            </div>
-
-            <!-- Cadastro Unitário -->
-            <div id="frotaUnidade" class="flex gap-2 mb-4">
-                <input id="nPlaca" class="border p-2 w-full uppercase rounded text-sm" placeholder="Placa">
-                <button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700"><i class="fas fa-plus"></i></button>
-            </div>
-
-            <!-- Cadastro em Massa (Novo) -->
-            <div id="frotaMassa" class="hidden mb-4">
-                <textarea id="textoFrota" class="w-full border p-2 text-xs h-24 rounded" placeholder="Cole aqui:&#10;ABC-1234, SCANIA&#10;XYZ-9999, VOLVO"></textarea>
-                <button onclick="importarFrota()" class="w-full bg-blue-600 text-white text-xs py-2 rounded mt-1">Importar Tudo</button>
-            </div>
-
-            <ul id="lFrota" class="h-48 overflow-y-auto text-sm space-y-2 border-t pt-2"></ul>
-            <button onclick="fechar('modalFrota')" class="w-full mt-4 bg-gray-200 py-2 rounded text-sm font-bold">Fechar</button>
-        </div>
-    </div>
-
-    <!-- MODAL EQUIPE COM IMPORTAÇÃO -->
-    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded w-96 shadow-xl">
-            <h2 class="font-bold mb-4 border-b pb-2">👥 Equipe</h2>
-            
-            <div class="flex gap-2 text-xs mb-3">
-                <button onclick="toggleAba('equipe', 'unidade')" class="text-blue-600 font-bold underline">Cadastrar 1</button>
-                <button onclick="toggleAba('equipe', 'massa')" class="text-gray-500">Importar Lista</button>
-            </div>
-
-            <div id="equipeUnidade" class="flex gap-2 mb-4">
-                <input id="nNome" class="border p-2 w-full uppercase rounded text-sm" placeholder="Nome">
-                <input id="nPin" class="border p-2 w-20 text-center rounded text-sm" placeholder="PIN">
-                <button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700"><i class="fas fa-plus"></i></button>
-            </div>
-
-            <div id="equipeMassa" class="hidden mb-4">
-                <textarea id="textoEquipe" class="w-full border p-2 text-xs h-24 rounded" placeholder="Cole aqui:&#10;JOAO SILVA, 1234&#10;MARIA SOUZA, 9999"></textarea>
-                <button onclick="importarEquipe()" class="w-full bg-blue-600 text-white text-xs py-2 rounded mt-1">Importar Tudo</button>
-            </div>
-
-            <ul id="lEquipe" class="h-48 overflow-y-auto text-sm space-y-2 border-t pt-2"></ul>
-            <button onclick="fechar('modalEquipe')" class="w-full mt-4 bg-gray-200 py-2 rounded text-sm font-bold">Fechar</button>
-        </div>
-    </div>
-
-    <!-- MODAIS PADRÃO (Manutenção, Auditoria) -->
-    <div id="modalManutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-xl"><h2 class="font-bold mb-4">Ocorrência</h2><p id="modalPlaca" class="text-2xl font-bold mb-4 text-center">ABC-1234</p><label class="text-xs font-bold text-gray-500">STATUS</label><select id="novoStatus" class="w-full border p-2 rounded mb-4"><option value="PENDENTE">🔴 PENDENTE</option><option value="EM_ANALISE">🟡 EM MANUTENÇÃO</option><option value="CONCLUIDO">🟢 CONCLUÍDO</option></select><label class="text-xs font-bold text-gray-500">NOTAS</label><textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm"></textarea><input type="hidden" id="idChecklistAtual"><button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold">SALVAR</button><button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-500 text-sm">Cancelar</button></div></div>
-    <div id="modalAuditoria" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-xl"><h2 class="font-bold mb-4 text-purple-900 text-lg">Logs</h2><div class="flex-1 overflow-y-auto border rounded bg-gray-50 p-2"><table class="w-full text-xs text-left"><tbody id="tabelaLogs"></tbody></table></div><button onclick="fechar('modalAuditoria')" class="mt-4 bg-gray-200 px-4 py-2 rounded text-sm">Fechar</button></div></div>
-
-    <script>
-        const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2203/2203124.png";
-        const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
-        const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
-        const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
-        let dadosGlobais = [];
-
-        window.onload = function() {
-            document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
-            document.getElementById('filtroData').valueAsDate = new Date();
-            if(prompt("Senha Admin:") !== "1234") return;
-            carregarDados();
-        }
-
-        // --- IMPORTAÇÃO EM MASSA (NOVO) ---
-        function toggleAba(modal, aba) {
-            document.getElementById(`${modal}Unidade`).classList.add('hidden');
-            document.getElementById(`${modal}Massa`).classList.add('hidden');
-            document.getElementById(`${modal}${aba.charAt(0).toUpperCase() + aba.slice(1)}`).classList.remove('hidden');
-        }
-
-        async function importarFrota() {
-            const texto = document.getElementById('textoFrota').value;
-            if(!texto) return;
-            const linhas = texto.split('\n');
-            let count = 0;
-            for(let linha of linhas) {
-                const [placa, modelo] = linha.split(',');
-                if(placa) {
-                    await sb.from('frota').insert({placa: placa.trim().toUpperCase(), modelo: modelo ? modelo.trim() : ''});
-                    count++;
-                }
-            }
-            alert(`${count} veículos importados!`);
-            loadFrota();
-            document.getElementById('textoFrota').value = '';
-        }
-
-        async function importarEquipe() {
-            const texto = document.getElementById('textoEquipe').value;
-            if(!texto) return;
-            const linhas = texto.split('\n');
-            let count = 0;
-            for(let linha of linhas) {
-                const [nome, pin] = linha.split(',');
-                if(nome && pin) {
-                    await sb.from('funcionarios').insert({nome: nome.trim().toUpperCase(), pin: pin.trim()});
-                    count++;
-                }
-            }
-            alert(`${count} funcionários importados!`);
-            loadEquipe();
-            document.getElementById('textoEquipe').value = '';
-        }
-
-        // --- SISTEMA CORE (IGUAL v17) ---
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between i
+                
+        // --- CORE ---
         async function carregarDados() {
             const list = document.getElementById('lista'); list.innerHTML = '<p class="mt-10"><i class="fas fa-spinner fa-spin"></i> Carregando...</p>';
             const dataFiltro = document.getElementById('filtroData').value;
             let query = sb.from('checklists').select('*').order('created_at', {ascending:false});
             if(dataFiltro) query = query.gte('created_at', `${dataFiltro}T00:00:00`).lte('created_at', `${dataFiltro}T23:59:59`);
             else query = query.limit(100);
-            const { data } = await query;
-            dadosGlobais = data; renderizar(data); renderizarTimeline(data); atualizarKPIs(data);
+            
+            const { data, error } = await query;
+            if(error) return alert("Erro de conexão");
+            
+            dadosGlobais = data;
+            renderizar(data);
+            renderizarTimeline(data);
+            atualizarKPIs(data);
         }
 
         function renderizar(data) {
@@ -199,26 +50,39 @@
             });
         }
 
+        // --- TIMELINE ---
         function renderizarTimeline(d){const t=document.getElementById('timelineContainer');t.innerHTML='';d.forEach(i=>{const h=new Date(i.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const c=isAprovado(i)?'bg-green-500':'bg-red-500';const ic=i.tipo_operacao==='SAIDA'?'fa-arrow-right':'fa-arrow-left';t.innerHTML+=`<div class="relative"><div class="absolute -left-[34px] bg-slate-100 border-4 border-white rounded-full w-4 h-4 ${c}"></div><div class="bg-white p-4 rounded shadow border border-gray-100 mb-4 hover:shadow-md transition"><span class="text-xs font-bold text-gray-400">${h}</span><h4 class="font-bold text-slate-800"><i class="fas ${ic} text-xs mr-2"></i> ${i.tipo_operacao} - ${i.placa}</h4><p class="text-sm text-gray-600">${i.motorista}</p>${!isAprovado(i)?'<p class="text-xs text-red-500 font-bold mt-1">⚠️ OCORRÊNCIA</p>':''}</div></div>`})}
-        function gerarPDF(d){const i=JSON.parse(decodeURIComponent(d));const w=window.open('','','width=900,height=1100');w.document.write(`<html><head><title>Relatório</title><style>body{font-family:'Segoe UI',sans-serif;padding:40px;color:#333}.header{display:flex;align-items:center;border-bottom:3px solid #333;padding-bottom:20px;margin-bottom:30px}.logo-pdf{height:60px;margin-right:20px}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{border:1px solid #eee;padding:8px}th{background:#f1f5f9}.ass-img{height:60px}</style></head><body><div class="header"><img src="${LOGO_URL}" class="logo-pdf"><div><h1>RELATÓRIO DE VISTORIA</h1>ID: #${i.id} | ${i.tipo_operacao}</div></div><p><b>VEÍCULO:</b> ${i.placa}</p><p><b>MOTORISTA:</b> ${i.motorista}</p><table><tr><th>ITEM</th><th>STATUS</th></tr><tr><td>Pneus</td><td>${i.pneu_ok?'OK':'FALHA'}</td></tr><tr><td>Luzes</td><td>${i.luzes_ok?'OK':'FALHA'}</td></tr><tr><td>Fluídos</td><td>${i.fluidos_ok?'OK':'FALHA'}</td></tr><tr><td>Lataria</td><td>${i.lataria_ok?'OK':'FALHA'}</td></tr><tr><td>Interior</td><td>${i.interior_ok?'OK':'FALHA'}</td></tr></table><p><b>OBS:</b> ${i.observacao||'-'}</p><div style="text-align:center"><img src="${i.foto_url}" style="max-height:300px"></div>${i.assinatura_url?`<div style="text-align:center;margin-top:40px"><img src="${i.assinatura_url}" class="ass-img"><hr style="width:200px"><p>Assinado Digitalmente</p></div>`:''}<script>setTimeout(()=>window.print(),2000)<\/script></body></html>`);}
+
+        // --- UTILS ---
+        function toggleAba(m,a){document.getElementById(`${m}Unidade`).classList.add('hidden');document.getElementById(`${m}Massa`).classList.add('hidden');document.getElementById(`${m}${a.charAt(0).toUpperCase()+a.slice(1)}`).classList.remove('hidden')}
+        async function importarFrota(){const t=document.getElementById('textoFrota').value;const lines=t.split('\n');for(let l of lines){const[p,m]=l.split(',');if(p)await sb.from('frota').insert({placa:p.trim().toUpperCase(),modelo:m?m.trim():''})}alert("Importado!");loadFrota()}
+        async function importarEquipe(){const t=document.getElementById('textoEquipe').value;const lines=t.split('\n');for(let l of lines){const[n,p]=l.split(',');if(n&&p)await sb.from('funcionarios').insert({nome:n.trim().toUpperCase(),pin:p.trim()})}alert("Importado!");loadEquipe()}
         
-        // Utils
         function alternarVisao(v){if(v==='lista'){document.getElementById('viewLista').classList.remove('hidden');document.getElementById('viewTimeline').classList.add('hidden')}else{document.getElementById('viewLista').classList.add('hidden');document.getElementById('viewTimeline').classList.remove('hidden')}}
-        function atualizarKPIs(d){const p=d.filter(i=>!isAprovado(i)&&(i.status_manutencao==='PENDENTE'||!i.status_manutencao)).length; document.getElementById('kpiPendente').innerText=p; document.getElementById('kpiAndamento').innerText=d.filter(i=>i.status_manutencao==='EM_ANALISE').length; document.getElementById('kpiAprovados').innerText=d.filter(i=>isAprovado(i)||i.status_manutencao==='CONCLUIDO').length; document.getElementById('kpiTotal').innerText=d.length;}
         function isAprovado(i){return(i.pneu_ok!==false&&i.luzes_ok!==false&&i.fluidos_ok!==false&&i.lataria_ok!==false&&i.interior_ok!==false)}
-        function exportarCSV(){let c="ID,DATA,OPERACAO,PLACA,MOTORISTA,STATUS\n";dadosGlobais.forEach(r=>{c+=`${r.id},${r.created_at},${r.tipo_operacao},${r.placa},${r.motorista},${isAprovado(r)?'OK':'FALHA'}\n`});const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dados.csv';a.click()}
         async function registrarLog(a,d){await sb.from('auditoria').insert({usuario:'ADMIN',acao:a,detalhes:d})}
-        async function abrirAuditoria(){document.getElementById('modalAuditoria').classList.remove('hidden');const t=document.getElementById('tabelaLogs');t.innerHTML='Carregando...';const{data}=await sb.from('auditoria').select('*').order('data_hora',{ascending:false}).limit(50);t.innerHTML='';data.forEach(l=>{t.innerHTML+=`<tr class="border-b"><td class="p-2">${new Date(l.data_hora).toLocaleString()}</td><td class="p-2">${l.usuario}</td><td class="p-2 font-bold">${l.acao}</td><td class="p-2 text-gray-500 truncate max-w-xs">${l.detalhes}</td></tr>`})}
-        function abrirManutencao(id,p,s){document.getElementById('idChecklistAtual').value=id;document.getElementById('modalPlaca').innerText=p;document.getElementById('novoStatus').value=s;document.getElementById('notasManutencao').value='';document.getElementById('modalManutencao').classList.remove('hidden')}
-        async function salvarManutencao(){const id=document.getElementById('idChecklistAtual').value;await sb.from('checklists').update({status_manutencao:document.getElementById('novoStatus').value,notas_manutencao:document.getElementById('notasManutencao').value}).match({id});await registrarLog('MANUTENÇÃO',id);fechar('modalManutencao');carregarDados()}
-        async function apagarChecklist(id,p){if(confirm("Excluir?")){await sb.from('checklists').delete().match({id});await registrarLog('EXCLUIU',p);carregarDados()}}
+        
+        function gerarPDF(d){
+            const i=JSON.parse(decodeURIComponent(d));
+            const w=window.open('','','width=900,height=1100');
+            w.document.write(`<html><head><title>Relatório</title><style>body{font-family:'Segoe UI',sans-serif;padding:40px}.header{display:flex;align-items:center;border-bottom:3px solid #333;padding-bottom:20px;margin-bottom:30px}.logo-pdf{height:60px;margin-right:20px}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{border:1px solid #ccc;padding:8px}th{background:#eee}.ass-img{height:60px}</style></head><body><div class="header"><img src="${LOGO_URL}" class="logo-pdf"><div><h1>RELATÓRIO #${i.id}</h1>${i.tipo_operacao}</div></div><p>Veículo: ${i.placa} | Motorista: ${i.motorista}</p><p>Status: ${isAprovado(i)?'<b style="color:green">APROVADO</b>':'<b style="color:red">FALHA</b>'}</p><table><tr><th>Item</th><th>Status</th></tr><tr><td>Pneus</td><td>${i.pneu_ok?'OK':'FALHA'}</td></tr><tr><td>Luzes</td><td>${i.luzes_ok?'OK':'FALHA'}</td></tr><tr><td>Fluídos</td><td>${i.fluidos_ok?'OK':'FALHA'}</td></tr></table><p>Obs: ${i.observacao||'-'}</p><img src="${i.foto_url}" style="max-height:300px">${i.assinatura_url?`<div style="margin-top:30px"><img src="${i.assinatura_url}" class="ass-img"><hr style="width:200px;margin:0"><p>Assinado</p></div>`:''}<script>setTimeout(()=>window.print(),2000)<\/script></body></html>`);
+        }
+
+        // CRUD Simples
         function abrir(id,cb){document.getElementById(id).classList.remove('hidden');if(cb)cb()} function fechar(id){document.getElementById(id).classList.add('hidden')}
-        async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-2 border-b bg-gray-50 px-2 rounded mb-1"><span>${v.placa}</span> <button onclick="del('frota',${v.id},loadFrota)" class="text-red-500 hover:text-red-700 font-bold px-2">X</button></li>`)}
+        async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`)}
         async function addFrota(){const p=document.getElementById('nPlaca').value.toUpperCase();if(p){await sb.from('frota').insert({placa:p});await registrarLog('ADD VEICULO',p);loadFrota();document.getElementById('nPlaca').value=''}}
-        async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-2 border-b bg-gray-50 px-2 rounded mb-1"><span>${u.nome}</span> <button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500 hover:text-red-700 font-bold px-2">X</button></li>`)}
+        async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`)}
         async function addEquipe(){const n=document.getElementById('nNome').value.toUpperCase();const p=document.getElementById('nPin').value;if(n){await sb.from('funcionarios').insert({nome:n,pin:p});await registrarLog('ADD STAFF',n);loadEquipe();document.getElementById('nNome').value=''}}
-        async function del(t,id,cb){if(confirm("Apagar?")){await sb.from(t).delete().match({id});await registrarLog('APAGOU CADASTRO',t);cb()}}
+        async function del(t,id,cb){if(confirm("Excluir?")){await sb.from(t).delete().match({id});await registrarLog('EXCLUIU',t);cb()}}
+        
+        async function abrirAuditoria(){document.getElementById('modalAuditoria').classList.remove('hidden');const t=document.getElementById('tabelaLogs');t.innerHTML='Carregando...';const{data}=await sb.from('auditoria').select('*').order('data_hora',{ascending:false}).limit(50);t.innerHTML='';data.forEach(l=>{t.innerHTML+=`<tr class="border-b"><td class="p-1">${new Date(l.data_hora).toLocaleString()}</td><td class="p-1">${l.usuario}</td><td class="p-1">${l.acao}</td><td class="p-1">${l.detalhes}</td></tr>`})}
+        function abrirManutencao(id,p,s){document.getElementById('idChecklistAtual').value=id;document.getElementById('modalPlaca').innerText=p;document.getElementById('novoStatus').value=s;document.getElementById('notasManutencao').value='';document.getElementById('modalManutencao').classList.remove('hidden')} 
+        async function salvarManutencao(){const id=document.getElementById('idChecklistAtual').value;await sb.from('checklists').update({status_manutencao:document.getElementById('novoStatus').value,notas_manutencao:document.getElementById('notasManutencao').value}).match({id});await registrarLog('MANUTENÇÃO',id);fechar('modalManutencao');carregarDados()}
+        async function apagarChecklist(id,p){if(confirm("Excluir irreversivelmente?")){await sb.from('checklists').delete().match({id});await registrarLog('EXCLUIU CHECK',p);carregarDados()}}
         function filtrar(){renderizar(dadosGlobais.filter(d=>d.placa.includes(document.getElementById('busca').value.toUpperCase())))}
+        function exportarCSV(){let c="ID,DATA,OPERACAO,PLACA,MOTORISTA,STATUS\n";dadosGlobais.forEach(r=>{c+=`${r.id},${r.created_at},${r.tipo_operacao},${r.placa},${r.motorista},${isAprovado(r)?'OK':'FALHA'}\n`});const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dados.csv';a.click()}
+        function atualizarKPIs(d){const p=d.filter(i=>!isAprovado(i)&&(i.status_manutencao==='PENDENTE'||!i.status_manutencao)).length;document.getElementById('kpiPendente').innerText=p;document.getElementById('kpiAndamento').innerText=d.filter(i=>i.status_manutencao==='EM_ANALISE').length;document.getElementById('kpiAprovados').innerText=d.filter(i=>isAprovado(i)||i.status_manutencao==='CONCLUIDO').length;document.getElementById('kpiTotal').innerText=d.length;}
     </script>
 </body>
-</html>
+            </html>
