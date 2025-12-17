@@ -3,45 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gestor Completo</title>
+    <title>Gestão de Frota</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-lg"><i class="fas fa-truck-moving text-blue-400 mr-2"></i>LOGÍSTICA <span class="text-slate-400">PRO</span></h1>
+    <!-- Navbar -->
+    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="font-bold text-lg"><i class="fas fa-satellite-dish text-green-400 mr-2"></i>LOGÍSTICA <span class="text-slate-400">CONTROL</span></h1>
+            
+            <!-- ÁREA DE BUSCA -->
+            <div class="flex bg-slate-800 rounded-lg p-1 w-full md:w-auto">
+                <input type="text" id="buscaPlaca" placeholder="Buscar Placa..." class="bg-transparent text-white px-3 py-1 outline-none w-32 uppercase">
+                <input type="date" id="buscaData" class="bg-transparent text-white px-3 py-1 outline-none text-sm">
+                <button onclick="carregarDados()" class="bg-blue-600 px-4 py-1 rounded hover:bg-blue-500 font-bold"><i class="fas fa-search"></i></button>
+            </div>
+
             <div class="flex gap-2">
-                <button onclick="toggleModalFrota()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-sm"><i class="fas fa-plus-circle mr-1"></i> Frota</button>
-                <button onclick="carregarDados()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-sm"><i class="fas fa-sync"></i></button>
+                <button onclick="document.getElementById('modalFrota').classList.remove('hidden'); carregarListaFrota();" class="bg-slate-700 px-3 py-1 rounded text-sm hover:bg-slate-600">Frota</button>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-6xl mx-auto p-4 space-y-6">
-        <!-- Lista de Checklists -->
+    <div class="max-w-7xl mx-auto p-4 space-y-6">
         <div id="lista-checklists" class="space-y-4">
             <p class="text-center text-gray-400 mt-10">Carregando...</p>
         </div>
     </div>
 
-    <!-- MODAL DE CADASTRO DE FROTA (Escondido) -->
-    <div id="modalFrota" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <!-- Modal Frota (Igual anterior) -->
+    <div id="modalFrota" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-xl w-96">
-            <h2 class="text-xl font-bold mb-4">🚛 Cadastrar Veículo</h2>
-            <input type="text" id="novaPlaca" class="w-full p-2 border rounded mb-2 uppercase" placeholder="Placa (Ex: ABC-1234)">
-            <input type="text" id="novoModelo" class="w-full p-2 border rounded mb-4" placeholder="Modelo (Ex: Scania R450)">
-            
-            <button onclick="salvarVeiculo()" class="w-full bg-green-600 text-white p-2 rounded font-bold mb-2">SALVAR</button>
-            
-            <div class="border-t pt-2 mt-2">
-                <p class="text-xs font-bold text-gray-500 mb-2">Veículos Cadastrados:</p>
-                <ul id="listaFrotaModal" class="text-sm text-gray-700 max-h-32 overflow-y-auto"></ul>
-            </div>
-
-            <button onclick="toggleModalFrota()" class="w-full mt-4 text-red-500 text-sm hover:underline">Fechar</button>
+            <h2 class="font-bold mb-4">Gerenciar Frota</h2>
+            <input type="text" id="novaPlaca" class="w-full border p-2 mb-2 uppercase" placeholder="Placa">
+            <input type="text" id="novoModelo" class="w-full border p-2 mb-2" placeholder="Modelo">
+            <button onclick="salvarVeiculo()" class="w-full bg-green-600 text-white p-2 rounded mb-4">Adicionar</button>
+            <ul id="listaFrotaModal" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
+            <button onclick="document.getElementById('modalFrota').classList.add('hidden')" class="w-full mt-2 text-red-500">Fechar</button>
         </div>
     </div>
 
@@ -57,77 +58,92 @@
 
         async function carregarDados() {
             const container = document.getElementById('lista-checklists');
-            const { data, error } = await meuSupabase.from('checklists').select('*').order('created_at', { ascending: false }).limit(50);
+            const placaBusca = document.getElementById('buscaPlaca').value.toUpperCase();
+            const dataBusca = document.getElementById('buscaData').value;
             
-            if (error) { alert("Erro"); return; }
+            container.innerHTML = '<p class="text-center text-gray-400">Filtrando...</p>';
+
+            // Construção da Query (Busca Dinâmica)
+            let query = meuSupabase.from('checklists').select('*').order('created_at', { ascending: false }).limit(50);
+            
+            if (placaBusca) query = query.ilike('placa', `%${placaBusca}%`); // Busca parcial
+            if (dataBusca) {
+                // Filtra pelo dia exato (entre 00:00 e 23:59)
+                query = query.gte('created_at', `${dataBusca}T00:00:00`).lte('created_at', `${dataBusca}T23:59:59`);
+            }
+
+            const { data, error } = await query;
+            if (error) { alert("Erro na busca"); return; }
+            if (data.length === 0) { container.innerHTML = '<p class="text-center text-gray-500">Nenhum registro encontrado.</p>'; return; }
+
             container.innerHTML = '';
 
             data.forEach(item => {
                 const dataF = new Date(item.created_at).toLocaleString('pt-BR');
-                const km = item.km || "---";
+                const assinatura = item.assinatura_url || ""; // Pega assinatura se tiver
+                const dadosPDF = encodeURIComponent(JSON.stringify(item));
+                
                 const card = `
-                    <div class="bg-white rounded-lg shadow border p-4 hover:shadow-lg transition flex flex-col md:flex-row gap-4">
-                        <div class="w-full md:w-32 h-32 flex-shrink-0">
-                            <a href="${item.foto_url}" target="_blank"><img src="${item.foto_url}" class="w-full h-full object-cover rounded border"></a>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between">
-                                <h3 class="font-bold text-xl">${item.placa}</h3>
-                                <span class="px-2 py-1 rounded text-xs font-bold ${item.pneu_ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${item.pneu_ok ? 'APROVADO' : 'FALHA'}</span>
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition p-4 border border-gray-200">
+                        <div class="flex flex-col md:flex-row gap-4 items-center">
+                            <img src="${item.foto_url}" class="w-24 h-24 object-cover rounded bg-gray-100 border cursor-pointer" onclick="window.open('${item.foto_url}')">
+                            
+                            <div class="flex-1 w-full">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-bold text-xl text-slate-800">${item.placa}</h3>
+                                    <span class="text-xs font-bold px-2 py-1 rounded ${item.pneu_ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${item.pneu_ok ? 'OK' : 'FALHA'}</span>
+                                </div>
+                                <p class="text-sm text-gray-600">${item.motorista} | ${dataF}</p>
+                                <div class="flex gap-4 mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                                    <span><b>KM:</b> ${item.km}</span>
+                                    <span><b>TANQUE:</b> ${item.combustivel}</span>
+                                </div>
                             </div>
-                            <p class="text-sm text-gray-500">${item.motorista} • ${dataF}</p>
-                            <p class="text-xs font-bold text-gray-600 mt-2">KM: ${km} | TANQUE: ${item.combustivel || '--'}</p>
-                        </div>
-                        <div class="flex md:flex-col gap-2 justify-center">
-                            <a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" class="px-3 py-2 bg-blue-50 text-blue-600 rounded text-center"><i class="fas fa-map-marker-alt"></i></a>
-                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(item))}')" class="px-3 py-2 bg-slate-800 text-white rounded"><i class="fas fa-file-pdf"></i></button>
+
+                            <div class="flex flex-col gap-2 w-full md:w-auto">
+                                <a href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-4 py-2 rounded text-center text-sm font-bold hover:bg-blue-100">Mapa</a>
+                                <button onclick="gerarPDF('${dadosPDF}')" class="bg-slate-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-slate-700">PDF</button>
+                            </div>
                         </div>
                     </div>`;
                 container.innerHTML += card;
             });
         }
 
-        // --- GESTÃO DE FROTA ---
-        function toggleModalFrota() {
-            const modal = document.getElementById('modalFrota');
-            modal.classList.toggle('hidden');
-            if(!modal.classList.contains('hidden')) carregarListaFrota();
-        }
-
+        // Funções da Frota (iguais ao anterior)
         async function carregarListaFrota() {
             const lista = document.getElementById('listaFrotaModal');
             const { data } = await meuSupabase.from('frota').select('*').order('placa');
             lista.innerHTML = '';
-            data.forEach(v => {
-                lista.innerHTML += `<li class="border-b py-1 flex justify-between"><span>${v.placa}</span> <button onclick="deletarVeiculo(${v.id})" class="text-red-500 text-xs">Excluir</button></li>`;
-            });
+            data.forEach(v => lista.innerHTML += `<li class="border-b py-1 flex justify-between"><span>${v.placa}</span> <button onclick="deletarVeiculo(${v.id})" class="text-red-500 text-xs">X</button></li>`);
         }
-
         async function salvarVeiculo() {
             const placa = document.getElementById('novaPlaca').value.toUpperCase();
             const modelo = document.getElementById('novoModelo').value;
-            if(!placa) return alert("Digite a placa!");
-
-            const { error } = await meuSupabase.from('frota').insert({ placa, modelo });
-            if(error) alert("Erro ao salvar");
-            else {
-                alert("Veículo salvo!");
-                document.getElementById('novaPlaca').value = '';
-                document.getElementById('novoModelo').value = '';
-                carregarListaFrota();
-            }
+            if(placa) { await meuSupabase.from('frota').insert({placa, modelo}); carregarListaFrota(); document.getElementById('novaPlaca').value=''; }
         }
+        async function deletarVeiculo(id) { if(confirm("Apagar?")) { await meuSupabase.from('frota').delete().match({id}); carregarListaFrota(); } }
 
-        async function deletarVeiculo(id) {
-            if(!confirm("Tem certeza?")) return;
-            await meuSupabase.from('frota').delete().match({ id });
-            carregarListaFrota();
-        }
-
+        // PDF COM ASSINATURA
         function gerarPDF(d) {
             const i = JSON.parse(decodeURIComponent(d));
+            const assinaturaImg = i.assinatura_url ? `<div style="text-align:center; margin-top:20px;"><p style="font-size:10px;">ASSINADO DIGITALMENTE POR:</p><img src="${i.assinatura_url}" style="height:60px; border-bottom:1px solid #000;"> <p>${i.motorista}</p></div>` : '';
+            
             const w = window.open('', '', 'width=800,height=900');
-            w.document.write(`<html><body style="font-family:sans-serif;padding:40px;text-align:center;"><h1>VISTORIA #${i.id}</h1><p>Veículo: ${i.placa} | Motorista: ${i.motorista}</p><p>Data: ${new Date(i.created_at).toLocaleString()}</p><img src="${i.foto_url}" style="max-width:100%;max-height:500px;margin-top:20px;"><script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
+            w.document.write(`
+                <html><body style="font-family:sans-serif;padding:40px;color:#333;">
+                    <div style="text-align:center;border-bottom:2px solid #333;margin-bottom:20px;"><h1>RELATÓRIO #${i.id}</h1></div>
+                    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                        <tr><td style="border:1px solid #ddd;padding:8px;background:#eee;"><b>PLACA</b></td><td style="border:1px solid #ddd;padding:8px;">${i.placa}</td></tr>
+                        <tr><td style="border:1px solid #ddd;padding:8px;background:#eee;"><b>DATA</b></td><td style="border:1px solid #ddd;padding:8px;">${new Date(i.created_at).toLocaleString()}</td></tr>
+                        <tr><td style="border:1px solid #ddd;padding:8px;background:#eee;"><b>KM</b></td><td style="border:1px solid #ddd;padding:8px;">${i.km}</td></tr>
+                        <tr><td style="border:1px solid #ddd;padding:8px;background:#eee;"><b>STATUS</b></td><td style="border:1px solid #ddd;padding:8px;">${i.pneu_ok ? 'APROVADO' : 'REPROVADO'}</td></tr>
+                    </table>
+                    <div style="text-align:center;margin-bottom:20px;"><img src="${i.foto_url}" style="max-height:350px;max-width:100%;border:1px solid #ccc;"></div>
+                    ${assinaturaImg}
+                    <script>setTimeout(()=>window.print(),1000)<\/script>
+                </body></html>
+            `);
         }
     </script>
 </body>
