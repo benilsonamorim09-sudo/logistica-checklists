@@ -2,207 +2,257 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Logística v10</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checklist Operacional v11</title>
+    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style> canvas { touch-action: none; background-color: #ffffff; cursor: crosshair; } </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gray-100 min-h-screen pb-10">
 
-    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+    <!-- TELA LOGIN -->
+    <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
+            
+            <!-- NOVA LOGO FUNCIONAL -->
+            <img src="" class="w-24 h-24 mx-auto mb-6 logo-img object-contain">
+            
+            <h1 class="text-xl font-bold text-slate-800 mb-1">ACESSO OPERACIONAL</h1>
+            <p class="text-gray-400 text-xs mb-8">Sistema de Checklist Logístico</p>
+
+            <div class="text-left mb-4">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Motorista</label>
+                <div class="relative">
+                    <select id="loginUsuario" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-lg font-bold appearance-none text-slate-700">
+                        <option value="">Carregando...</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div>
+                </div>
+            </div>
+
+            <div class="text-left mb-8">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Senha (PIN)</label>
+                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border border-slate-200 rounded-lg text-center text-3xl tracking-[0.5em] font-bold text-slate-800" placeholder="••••">
+            </div>
+
+            <button onclick="fazerLogin()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">INICIAR TURNO</button>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="appConteudo" class="hidden">
+        
+        <div class="bg-blue-900 p-6 shadow-lg rounded-b-3xl flex justify-between items-center text-white">
             <div class="flex items-center gap-3">
                 <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
-                <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-slate-400">ADMIN</span></h1>
+                <div>
+                    <h1 class="font-bold text-lg leading-none">CHECKLIST</h1>
+                    <p id="labelMotorista" class="text-blue-200 text-xs mt-1">Motorista...</p>
+                </div>
             </div>
+            <button onclick="sair()" class="bg-blue-800 px-3 py-1 rounded text-xs border border-blue-600">SAIR</button>
+        </div>
+
+        <div class="p-4 space-y-5 max-w-md mx-auto -mt-4">
             
-            <div class="flex bg-slate-800 rounded p-1 w-full md:w-auto">
-                <input id="busca" placeholder="Buscar Placa..." class="bg-transparent text-white px-2 outline-none uppercase w-full">
-                <button onclick="carregarDados()" class="px-3 text-blue-400"><i class="fas fa-search"></i></button>
+            <!-- 1. Veículo -->
+            <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-xs uppercase tracking-wide"><i class="fas fa-truck mr-1"></i> Identificação</h3>
+                
+                <div class="relative">
+                    <select id="placa" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-xl font-bold text-center uppercase appearance-none text-blue-900"><option value="">Carregando...</option></select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">KM Atual</label>
+                        <input type="number" id="km" class="w-full p-2 border rounded font-bold text-slate-700" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Combustível</label>
+                        <select id="combustivel" class="w-full p-2 border rounded bg-white text-slate-700">
+                            <option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Reserva</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <div class="flex gap-2 text-sm w-full md:w-auto justify-center">
-                <button onclick="abrir('modalFrota', loadFrota)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-truck"></i> Frota</button>
-                <button onclick="abrir('modalEquipe', loadEquipe)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-users"></i> Equipe</button>
-                <button onclick="carregarDados()" class="bg-green-700 px-3 py-1 rounded hover:bg-green-600"><i class="fas fa-sync"></i></button>
+            <!-- 2. Inspeção Técnica -->
+            <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-xs uppercase tracking-wide"><i class="fas fa-tasks mr-1"></i> Itens de Segurança</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-circle-notch w-6 text-center text-blue-400"></i>Pneus</label>
+                        <select id="pneu_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-lightbulb w-6 text-center text-yellow-500"></i>Luzes</label>
+                        <select id="luzes_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-oil-can w-6 text-center text-gray-500"></i>Fluídos</label>
+                        <select id="fluidos_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-car-crash w-6 text-center text-red-400"></i>Lataria</label>
+                        <select id="lataria_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-broom w-6 text-center text-green-500"></i>Interior</label>
+                        <select id="interior_ok" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                </div>
             </div>
-        </div>
-    </nav>
 
-    <div class="max-w-7xl mx-auto p-4 space-y-6">
-        <div id="lista" class="space-y-4 text-center text-gray-400 mt-10">Carregando dados...</div>
-    </div>
+            <!-- 3. Foto e Obs -->
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                <h3 class="text-blue-900 font-bold text-xs uppercase mb-2">3. Evidência Visual</h3>
+                <label class="block w-full p-6 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition active:bg-blue-100 group">
+                    <i class="fas fa-camera text-2xl text-blue-400 mb-1 group-hover:scale-110 transition"></i>
+                    <span class="block text-blue-800 font-bold text-xs">FOTO OBRIGATÓRIA</span>
+                    <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="fotoTirada()">
+                </label>
+                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2 bg-green-50 p-1 rounded">✅ Imagem carregada!</p>
+                <textarea id="observacao" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Observações sobre avarias..."></textarea>
+            </div>
 
-    <!-- MODAIS -->
-    <div id="modalFrota" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4">Gerenciar Frota</h2>
-            <div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded">+</button></div>
-            <ul id="lFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
-            <button onclick="fechar('modalFrota')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
-        </div>
-    </div>
-    <div id="modalEquipe" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4">Gerenciar Equipe</h2>
-            <div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-20 text-center" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded">+</button></div>
-            <ul id="lEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
-            <button onclick="fechar('modalEquipe')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
+            <!-- 4. Assinatura -->
+            <div class="bg-white p-4 rounded-xl shadow-md border-2 border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-blue-900 font-bold text-xs uppercase"><i class="fas fa-pen-nib"></i> Assinatura Digital</h3>
+                    <button onclick="limparAssinatura()" class="bg-red-50 text-red-600 px-3 py-1 rounded text-[10px] font-bold border border-red-100">LIMPAR</button>
+                </div>
+                <div class="border-2 border-gray-300 rounded-lg overflow-hidden relative bg-gray-50" style="height: 200px;">
+                    <p class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-200 text-4xl pointer-events-none opacity-50"><i class="fas fa-signature"></i></p>
+                    <canvas id="signature-pad" class="w-full h-full relative z-10"></canvas>
+                </div>
+            </div>
+
+            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center">
+                <span>ENVIAR RELATÓRIO</span> <i class="fas fa-paper-plane"></i>
+            </button>
+            <p id="status" class="text-center text-xs text-gray-400 mt-4 pb-4">Logística Pro v11.0</p>
         </div>
     </div>
 
     <script>
-        // LOGO DIRETA
-        const LOGO_URL = "https://drive.google.com/uc?export=view&id=1vgsKlgy1zJV0BY1ecuBpMPcc0LATyDxV";
+        // --- LOGO DE PRANCHETA LOGÍSTICA (CDN CONFIÁVEL) ---
+        const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/10832/10832132.png";
 
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
-        const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+        const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
+        let motoristaAtual = "";
 
-        window.onload = function() {
+        // Inicialização
+        window.onload = async function() {
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
-            if(prompt("Senha Admin:") !== "1234") return;
-            carregarDados();
+            carregarUsuarios(); carregarFrota(); configurarCanvas();
+            const salvo = localStorage.getItem('usuario_logado');
+            if(salvo) { motoristaAtual = salvo; entrarNoSistema(); }
+        };
+
+        // --- LÓGICA DO SISTEMA ---
+        async function carregarUsuarios() {
+            const s = document.getElementById('loginUsuario');
+            const { data } = await meuSupabase.from('funcionarios').select('*').order('nome');
+            s.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(u => s.innerHTML += `<option value="${u.nome}" data-pin="${u.pin}">${u.nome}</option>`);
         }
-
-        async function carregarDados() {
-            const list = document.getElementById('lista');
-            const busca = document.getElementById('busca').value.toUpperCase();
-            let q = sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(50);
-            if(busca) q = q.ilike('placa', `%${busca}%`);
-            
-            const { data } = await q;
-            list.innerHTML = '';
-            
-            if(data.length === 0) list.innerHTML = '<p class="text-gray-400">Nenhum registro.</p>';
-
-            data.forEach(i => {
-                const pdfData = encodeURIComponent(JSON.stringify(i));
-                const card = `
-                    <div class="bg-white rounded shadow p-4 flex flex-col md:flex-row gap-4 border border-gray-200 hover:shadow-lg transition">
-                        <img src="${i.foto_url}" class="w-full md:w-32 h-32 object-cover rounded bg-gray-100 cursor-pointer border" onclick="window.open('${i.foto_url}')">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-lg text-slate-800">${i.placa}</h3>
-                                <!-- Status Geral (Se tudo OK) -->
-                                <span class="text-[10px] font-bold px-2 py-1 rounded ${i.pneu_ok && i.luzes_ok && i.fluidos_ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                    ${i.pneu_ok && i.luzes_ok && i.fluidos_ok ? 'APROVADO' : 'ATENÇÃO'}
-                                </span>
-                            </div>
-                            <p class="text-sm text-gray-600 font-bold">${i.motorista}</p>
-                            <p class="text-xs text-gray-400 mt-1">${new Date(i.created_at).toLocaleString()}</p>
-                            
-                            <div class="mt-2 text-xs bg-gray-50 p-2 rounded flex gap-4 border border-gray-100">
-                                <span><b>KM:</b> ${i.km}</span> <span><b>TANQUE:</b> ${i.combustivel}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex md:flex-col gap-2 justify-center min-w-[100px]">
-                            <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 py-2 rounded text-sm hover:bg-slate-700 w-full"><i class="fas fa-file-pdf"></i> PDF</button>
-                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-center text-sm hover:bg-blue-100 w-full"><i class="fas fa-map-marker-alt"></i></a>
-                            <button onclick="apagarChecklist(${i.id})" class="bg-red-50 text-red-500 px-3 py-2 rounded text-sm hover:bg-red-100 w-full"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>`;
-                list.innerHTML += card;
-            });
+        function fazerLogin() {
+            const s = document.getElementById('loginUsuario');
+            const pin = document.getElementById('loginPin').value;
+            const user = s.value;
+            const realPin = s.options[s.selectedIndex].getAttribute('data-pin');
+            if(user && pin === realPin) { motoristaAtual = user; localStorage.setItem('usuario_logado', user); entrarNoSistema(); }
+            else alert("PIN Incorreto!");
         }
-
-        async function apagarChecklist(id) {
-            if(!confirm("Tem certeza?")) return;
-            await sb.from('checklists').delete().match({id});
-            carregarDados();
+        function entrarNoSistema() {
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('appConteudo').classList.remove('hidden');
+            document.getElementById('labelMotorista').innerText = "Motorista: " + motoristaAtual;
+            setTimeout(configurarCanvas, 100);
         }
+        function sair() { localStorage.removeItem('usuario_logado'); window.location.reload(); }
 
-        function gerarPDF(d) {
-            const i = JSON.parse(decodeURIComponent(d));
-            const dataF = new Date(i.created_at).toLocaleString('pt-BR');
-            const obs = i.observacao || "Nenhuma.";
+        async function carregarFrota() {
+            const s = document.getElementById('placa');
+            const { data } = await meuSupabase.from('frota').select('*').order('placa');
+            if(data) data.forEach(v => s.innerHTML += `<option value="${v.placa}">${v.placa} - ${v.modelo}</option>`);
+        }
+        function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
+
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let writingMode = false;
+        function configurarCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            ctx.scale(ratio, ratio);
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+        }
+        window.addEventListener("resize", configurarCanvas);
+        const getPos = (e) => { const rect = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - rect.left, y: t.clientY - rect.top }; }
+        const start = (e) => { writingMode = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); e.preventDefault(); }
+        const end = (e) => { writingMode = false; e.preventDefault(); }
+        const move = (e) => { if(!writingMode) return; const {x,y} = getPos(e); ctx.lineTo(x,y); ctx.stroke(); e.preventDefault(); }
+        canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchend', end, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false});
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mouseup', end); canvas.addEventListener('mousemove', move);
+        function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        async function enviarDados() {
+            const btn = document.getElementById('btnEnviar');
+            const status = document.getElementById('status');
             
-            // Função auxiliar para ícone OK/Erro
-            const check = (val) => val ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold">FALHA</span>';
+            if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) 
+                return alert("Preencha Placa, KM e Foto!");
 
-            const htmlAss = i.assinatura_url 
-                ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` 
-                : `<div class="assinatura-box"><p style="color:red">[SEM ASSINATURA]</p></div>`;
+            btn.disabled = true; btn.innerHTML = 'ENVIANDO...'; btn.classList.add('opacity-50'); status.innerText = "Localizando...";
 
-            const w = window.open('','','width=900,height=1100');
-            w.document.write(`
-                <html>
-                <head>
-                    <title>Relatório ${i.placa}</title>
-                    <style>
-                        body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-                        .header { border-bottom: 3px solid #1e293b; padding-bottom: 20px; margin-bottom: 20px; display: flex; align-items: center; }
-                        .logo-pdf { height: 60px; margin-right: 20px; }
-                        .titulo h1 { margin: 0; color: #1e293b; font-size: 24px; text-transform: uppercase; }
-                        .meta { text-align: right; font-size: 12px; color: #666; margin-left: auto; }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    status.innerText = "Enviando imagens...";
+                    const arqFoto = document.getElementById('foto').files[0];
+                    const nomeFoto = `foto_${Date.now()}.jpg`;
+                    await meuSupabase.storage.from('evidencias').upload(nomeFoto, arqFoto);
+                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
+
+                    const assBlob = await new Promise(r => canvas.toBlob(r));
+                    const nomeAss = `ass_${Date.now()}.png`;
+                    await meuSupabase.storage.from('evidencias').upload(nomeAss, assBlob);
+                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
+
+                    status.innerText = "Salvando...";
+                    await meuSupabase.from('checklists').insert({
+                        placa: document.getElementById('placa').value,
+                        motorista: motoristaAtual,
+                        km: document.getElementById('km').value,
+                        combustivel: document.getElementById('combustivel').value,
                         
-                        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-                        .box { background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
-                        .label { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; }
-                        .valor { font-size: 14px; font-weight: 600; color: #0f172a; }
-
-                        .checklist-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        .checklist-table th { text-align: left; background: #e2e8f0; padding: 8px; font-size: 11px; }
-                        .checklist-table td { border-bottom: 1px solid #eee; padding: 8px; font-size: 13px; }
-
-                        .obs-box { background: #fff7ed; border: 1px solid #fdba74; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
-                        .foto-container { text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0; padding: 5px; }
-                        .foto-main { max-height: 350px; max-width: 100%; }
+                        pneu_ok: document.getElementById('pneu_ok').value === 'true',
+                        luzes_ok: document.getElementById('luzes_ok').value === 'true',
+                        fluidos_ok: document.getElementById('fluidos_ok').value === 'true',
+                        lataria_ok: document.getElementById('lataria_ok').value === 'true',
+                        interior_ok: document.getElementById('interior_ok').value === 'true',
                         
-                        .assinatura-box { text-align: center; margin-top: 30px; }
-                        .ass-img { height: 70px; }
-                        .linha { color: #ccc; }
-                        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; font-size: 9px; color: #999; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <img src="${LOGO_URL}" class="logo-pdf">
-                        <div class="titulo"><h1>Vistoria Técnica</h1></div>
-                        <div class="meta">ID: #${i.id}<br>${dataF}</div>
-                    </div>
-
-                    <div class="grid-info">
-                        <div class="box"><span class="label">Veículo</span><span class="valor">${i.placa}</span></div>
-                        <div class="box"><span class="label">Condutor</span><span class="valor">${i.motorista}</span></div>
-                        <div class="box"><span class="label">KM Atual</span><span class="valor">${i.km}</span></div>
-                        <div class="box"><span class="label">Combustível</span><span class="valor">${i.combustivel}</span></div>
-                    </div>
-
-                    <h3>Itens Inspecionados</h3>
-                    <table class="checklist-table">
-                        <tr><th>ITEM</th><th>STATUS</th></tr>
-                        <tr><td>Estado dos Pneus</td><td>${check(i.pneu_ok)}</td></tr>
-                        <tr><td>Luzes e Sinalização</td><td>${check(i.luzes_ok)}</td></tr>
-                        <tr><td>Fluídos (Óleo/Água)</td><td>${check(i.fluidos_ok)}</td></tr>
-                        <tr><td>Lataria/Funilaria</td><td>${check(i.lataria_ok)}</td></tr>
-                        <tr><td>Limpeza Interna</td><td>${check(i.interior_ok)}</td></tr>
-                    </table>
-
-                    <div class="obs-box"><b>OBSERVAÇÕES:</b> "${obs}"</div>
-
-                    <div class="foto-container">
-                        <img src="${i.foto_url}" class="foto-main">
-                    </div>
-
-                    ${htmlAss}
-
-                    <div class="footer">Localização GPS: ${i.latitude}, ${i.longitude}</div>
-                    <script>setTimeout(() => { window.print(); }, 1500);<\/script>
-                </body>
-                </html>
-            `);
+                        observacao: document.getElementById('observacao').value,
+                        foto_url: fotoUrl,
+                        assinatura_url: assUrl,
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    });
+                    
+                    alert("✅ REGISTRO ENVIADO!");
+                    window.location.reload();
+                } catch(e) { alert("Erro: " + e.message); btn.disabled = false; btn.innerHTML = 'ENVIAR'; }
+            }, () => { alert("Ative o GPS!"); btn.disabled = false; }, {enableHighAccuracy:true});
         }
-
-        function abrir(id, cb) { document.getElementById(id).classList.remove('hidden'); if(cb) cb(); }
-        function fechar(id) { document.getElementById(id).classList.add('hidden'); }
-        async function loadFrota() { const l=document.getElementById('lFrota'); l.innerHTML=''; const {data}=await sb.from('frota').select('*').order('placa'); data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`); }
-        async function addFrota() { const p=document.getElementById('nPlaca').value.toUpperCase(); if(p){await sb.from('frota').insert({placa:p}); loadFrota(); document.getElementById('nPlaca').value='';} }
-        async function loadEquipe() { const l=document.getElementById('lEquipe'); l.innerHTML=''; const {data}=await sb.from('funcionarios').select('*').order('nome'); data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`); }
-        async function addEquipe() { const n=document.getElementById('nNome').value.toUpperCase(); const p=document.getElementById('nPin').value; if(n&&p){await sb.from('funcionarios').insert({nome:n, pin:p}); loadEquipe(); document.getElementById('nNome').value='';} }
-        async function del(t, id, cb) { if(confirm("Apagar?")) { await sb.from(t).delete().match({id}); cb(); } }
     </script>
 </body>
-</html>
+                            </html>
