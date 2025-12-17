@@ -2,250 +2,286 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.G.O - Gestão de Ocorrências</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checklist Operacional v12</title>
+    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style> canvas { touch-action: none; background-color: #ffffff; cursor: crosshair; } </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-100 min-h-screen pb-10">
 
-    <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+    <!-- TELA LOGIN -->
+    <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
+            <img src="" class="w-32 mx-auto mb-6 logo-img object-contain">
+            <h1 class="text-xl font-bold text-slate-800 mb-1">ACESSO OPERACIONAL</h1>
+            <p class="text-gray-400 text-xs mb-8">Sistema Integrado Logístico</p>
+
+            <div class="text-left mb-4">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Motorista</label>
+                <div class="relative">
+                    <select id="loginUsuario" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-lg font-bold appearance-none text-slate-700">
+                        <option value="">Carregando...</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div>
+                </div>
+            </div>
+
+            <div class="text-left mb-8">
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Senha (PIN)</label>
+                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border border-slate-200 rounded-lg text-center text-3xl tracking-[0.5em] font-bold text-slate-800" placeholder="••••">
+            </div>
+
+            <button onclick="fazerLogin()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">INICIAR TURNO</button>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="appConteudo" class="hidden">
+        
+        <div class="bg-blue-900 p-6 shadow-lg rounded-b-3xl flex justify-between items-center text-white">
             <div class="flex items-center gap-3">
                 <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
-                <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-blue-400">CONTROL</span></h1>
+                <div>
+                    <h1 class="font-bold text-lg leading-none">CHECKLIST</h1>
+                    <p id="labelMotorista" class="text-blue-200 text-xs mt-1">Motorista...</p>
+                </div>
             </div>
+            <button onclick="sair()" class="bg-blue-800 px-3 py-1 rounded text-xs border border-blue-600">SAIR</button>
+        </div>
+
+        <!-- BARRA DE STATUS DO RASCUNHO -->
+        <div id="statusRascunho" class="hidden bg-yellow-100 text-yellow-800 text-center text-[10px] font-bold py-1">
+            <i class="fas fa-save mr-1"></i> Dados recuperados do rascunho automático
+        </div>
+
+        <div class="p-4 space-y-5 max-w-md mx-auto -mt-4">
             
-            <div class="flex gap-2 text-sm">
-                <button onclick="abrir('modalFrota', loadFrota)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-truck"></i> Frota</button>
-                <button onclick="abrir('modalEquipe', loadEquipe)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-users"></i> Equipe</button>
-                <button onclick="carregarDados()" class="bg-green-600 px-3 py-1 rounded hover:bg-green-500"><i class="fas fa-sync"></i></button>
-            </div>
-        </div>
-    </nav>
+            <!-- 1. Veículo -->
+            <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-xs uppercase tracking-wide"><i class="fas fa-truck mr-1"></i> Identificação</h3>
+                
+                <div class="relative">
+                    <select id="placa" onchange="salvarRascunho()" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg text-xl font-bold text-center uppercase appearance-none text-blue-900"><option value="">Carregando...</option></select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
+                </div>
 
-    <div class="max-w-7xl mx-auto p-4 space-y-6">
-        
-        <!-- DASHBOARD RÁPIDO -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded border-l-4 border-red-500 shadow">
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Pendências Críticas</span>
-                <p id="kpiPendente" class="text-2xl font-bold text-red-600">0</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">KM Atual</label>
+                        <input type="number" id="km" oninput="salvarRascunho()" class="w-full p-2 border rounded font-bold text-slate-700" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">Combustível</label>
+                        <select id="combustivel" onchange="salvarRascunho()" class="w-full p-2 border rounded bg-white text-slate-700">
+                            <option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Reserva</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded border-l-4 border-yellow-500 shadow">
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Em Manutenção</span>
-                <p id="kpiAndamento" class="text-2xl font-bold text-yellow-600">0</p>
-            </div>
-            <div class="bg-white p-4 rounded border-l-4 border-green-500 shadow">
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Total Aprovados</span>
-                <p id="kpiAprovados" class="text-2xl font-bold text-green-600">0</p>
-            </div>
-            <div class="bg-white p-4 rounded border-l-4 border-blue-500 shadow">
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Vistorias Hoje</span>
-                <p id="kpiTotal" class="text-2xl font-bold text-slate-700">0</p>
-            </div>
-        </div>
 
-        <!-- LISTA -->
-        <div>
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-slate-700">Painel de Controle</h3>
-                <input id="busca" onkeyup="filtrar()" placeholder="Filtrar placa..." class="border p-2 rounded text-sm uppercase w-40">
+            <!-- 2. Inspeção Técnica -->
+            <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
+                <h3 class="text-blue-900 font-bold border-b pb-2 text-xs uppercase tracking-wide"><i class="fas fa-tasks mr-1"></i> Itens de Segurança</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-circle-notch w-6 text-center text-blue-400"></i>Pneus</label>
+                        <select id="pneu_ok" onchange="salvarRascunho()" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-lightbulb w-6 text-center text-yellow-500"></i>Luzes</label>
+                        <select id="luzes_ok" onchange="salvarRascunho()" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-oil-can w-6 text-center text-gray-500"></i>Fluídos</label>
+                        <select id="fluidos_ok" onchange="salvarRascunho()" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-car-crash w-6 text-center text-red-400"></i>Lataria</label>
+                        <select id="lataria_ok" onchange="salvarRascunho()" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                    <div class="flex justify-between items-center py-1">
+                        <label class="font-bold text-sm text-gray-600"><i class="fas fa-broom w-6 text-center text-green-500"></i>Interior</label>
+                        <select id="interior_ok" onchange="salvarRascunho()" class="border rounded p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select>
+                    </div>
+                </div>
             </div>
-            <div id="lista" class="space-y-4 text-center text-gray-400">Carregando...</div>
+
+            <!-- 3. Foto e Obs -->
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
+                <h3 class="text-blue-900 font-bold text-xs uppercase mb-2">3. Evidência Visual</h3>
+                <label class="block w-full p-6 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition active:bg-blue-100 group">
+                    <i class="fas fa-camera text-2xl text-blue-400 mb-1 group-hover:scale-110 transition"></i>
+                    <span class="block text-blue-800 font-bold text-xs">FOTO OBRIGATÓRIA</span>
+                    <input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="fotoTirada()">
+                </label>
+                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2 bg-green-50 p-1 rounded">✅ Imagem carregada!</p>
+                <textarea id="observacao" oninput="salvarRascunho()" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Observações sobre avarias..."></textarea>
+            </div>
+
+            <!-- 4. Assinatura -->
+            <div class="bg-white p-4 rounded-xl shadow-md border-2 border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-blue-900 font-bold text-xs uppercase"><i class="fas fa-pen-nib"></i> Assinatura Digital</h3>
+                    <button onclick="limparAssinatura()" class="bg-red-50 text-red-600 px-3 py-1 rounded text-[10px] font-bold border border-red-100">LIMPAR</button>
+                </div>
+                <div class="border-2 border-gray-300 rounded-lg overflow-hidden relative bg-gray-50" style="height: 200px;">
+                    <canvas id="signature-pad" class="w-full h-full relative z-10"></canvas>
+                </div>
+            </div>
+
+            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center">
+                <span>ENVIAR RELATÓRIO</span> <i class="fas fa-paper-plane"></i>
+            </button>
+            <p id="status" class="text-center text-xs text-gray-400 mt-4 pb-4">Logística Pro v12 - Proteção de Dados Ativa</p>
         </div>
     </div>
-
-    <!-- MODAL MANUTENÇÃO (NOVO) -->
-    <div id="modalManutencao" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4 text-lg"><i class="fas fa-tools text-gray-600"></i> Gestão de Ocorrência</h2>
-            <p id="modalPlaca" class="text-2xl font-bold text-slate-800 mb-4 text-center">ABC-1234</p>
-            
-            <label class="text-xs font-bold text-gray-500">STATUS ATUAL</label>
-            <select id="novoStatus" class="w-full border p-2 rounded mb-4 font-bold">
-                <option value="PENDENTE">🔴 PENDENTE (Crítico)</option>
-                <option value="EM_ANALISE">🟡 EM MANUTENÇÃO (Oficina)</option>
-                <option value="CONCLUIDO">🟢 CONCLUÍDO (Liberado)</option>
-            </select>
-
-            <label class="text-xs font-bold text-gray-500">NOTAS DA OFICINA</label>
-            <textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm" placeholder="Ex: Trocado pneu dianteiro esquerdo..."></textarea>
-            
-            <input type="hidden" id="idChecklistAtual">
-            
-            <button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold mb-2">SALVAR ALTERAÇÕES</button>
-            <button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-500 text-sm">Cancelar</button>
-        </div>
-    </div>
-
-    <!-- MODAIS ANTIGOS (Frota/Equipe) - Mantidos compactos -->
-    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-80"><h2 class="font-bold mb-4">Frota</h2><div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2">+</button></div><ul id="lFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul><button onclick="fechar('modalFrota')" class="w-full mt-2 text-red-500">Fechar</button></div></div>
-    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-80"><h2 class="font-bold mb-4">Equipe</h2><div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-20" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2">+</button></div><ul id="lEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul><button onclick="fechar('modalEquipe')" class="w-full mt-2 text-red-500">Fechar</button></div></div>
 
     <script>
-        const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/10832/10832132.png";
+        const LOGO_URL = "https://drive.google.com/uc?export=view&id=1vgsKlgy1zJV0BY1ecuBpMPcc0LATyDxV";
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
-        let dadosGlobais = [];
+        let motoristaAtual = "";
 
-        window.onload = function() {
+        window.onload = async function() {
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
-            if(prompt("Senha Admin:") !== "1234") return;
-            carregarDados();
+            carregarUsuarios(); carregarFrota(); configurarCanvas();
+            const salvo = localStorage.getItem('usuario_logado');
+            if(salvo) { motoristaAtual = salvo; entrarNoSistema(); }
+        };
+
+        // --- SISTEMA DE RASCUNHO AUTOMÁTICO ---
+        function salvarRascunho() {
+            const dados = {
+                placa: document.getElementById('placa').value,
+                km: document.getElementById('km').value,
+                combustivel: document.getElementById('combustivel').value,
+                pneu: document.getElementById('pneu_ok').value,
+                luzes: document.getElementById('luzes_ok').value,
+                fluidos: document.getElementById('fluidos_ok').value,
+                lataria: document.getElementById('lataria_ok').value,
+                interior: document.getElementById('interior_ok').value,
+                obs: document.getElementById('observacao').value
+            };
+            localStorage.setItem('rascunho_checklist', JSON.stringify(dados));
         }
 
-        async function carregarDados() {
-            const { data } = await sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(60);
-            dadosGlobais = data;
-            renderizar(data);
-            atualizarKPIs(data);
-        }
-
-        function atualizarKPIs(data) {
-            // Conta quantos estão em cada status
-            const pendentes = data.filter(i => !isAprovado(i) && (i.status_manutencao === 'PENDENTE' || !i.status_manutencao)).length;
-            const manutencao = data.filter(i => i.status_manutencao === 'EM_ANALISE').length;
-            const aprovados = data.filter(i => isAprovado(i) || i.status_manutencao === 'CONCLUIDO').length;
-            
-            document.getElementById('kpiPendente').innerText = pendentes;
-            document.getElementById('kpiAndamento').innerText = manutencao;
-            document.getElementById('kpiAprovados').innerText = aprovados;
-            document.getElementById('kpiTotal').innerText = data.length;
-        }
-
-        function isAprovado(i) {
-            // Retorna true se todos os itens de checklist forem true
-            return (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
-        }
-
-        function renderizar(data) {
-            const list = document.getElementById('lista'); list.innerHTML = '';
-            
-            data.forEach(i => {
-                const aprovadoNoChecklist = isAprovado(i);
-                let statusManutencao = i.status_manutencao || 'PENDENTE';
-                if(aprovadoNoChecklist) statusManutencao = 'CONCLUIDO'; // Se aprovou no check, considera concluído
-
-                // Define Cores do Card
-                let borderClass = "border-green-500";
-                let bgClass = "bg-white";
-                let statusLabel = `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded">OK</span>`;
-
-                if(!aprovadoNoChecklist) {
-                    if(statusManutencao === 'PENDENTE') {
-                        borderClass = "border-red-500"; bgClass = "bg-red-50";
-                        statusLabel = `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse">PENDENTE</span>`;
-                    } else if(statusManutencao === 'EM_ANALISE') {
-                        borderClass = "border-yellow-500"; bgClass = "bg-yellow-50";
-                        statusLabel = `<span class="bg-yellow-500 text-white text-[10px] font-bold px-2 py-1 rounded">EM OFICINA</span>`;
-                    } else if(statusManutencao === 'CONCLUIDO') {
-                        borderClass = "border-blue-500"; bgClass = "bg-blue-50 opacity-75";
-                        statusLabel = `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded">RESOLVIDO</span>`;
-                    }
-                }
-
-                const falhas = !aprovadoNoChecklist ? `
-                    <div class="mt-2 text-xs text-red-600 font-bold border-t border-gray-200 pt-2">
-                        ALERTA DE FALHAS: 
-                        ${i.pneu_ok===false?'PNEU ':''} ${i.luzes_ok===false?'LUZES ':''} ${i.fluidos_ok===false?'FLUÍDOS ':''} 
-                        ${i.lataria_ok===false?'LATARIA ':''} ${i.interior_ok===false?'INTERIOR':''}
-                    </div>` : '';
-
-                const notas = i.notas_manutencao ? `<p class="mt-2 text-xs text-gray-600 italic bg-white p-2 rounded border">🔧 Oficina: "${i.notas_manutencao}"</p>` : '';
-
-                const card = `
-                    <div class="rounded shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${borderClass} ${bgClass} transition">
-                        <img src="${i.foto_url}" class="w-24 h-24 object-cover rounded border cursor-pointer bg-gray-200" onclick="window.open('${i.foto_url}')">
-                        <div class="flex-1 text-left">
-                            <div class="flex justify-between">
-                                <h3 class="font-bold text-lg">${i.placa}</h3>
-                                ${statusLabel}
-                            </div>
-                            <p class="text-sm text-gray-600">${i.motorista} • ${new Date(i.created_at).toLocaleString()}</p>
-                            ${falhas}
-                            ${notas}
-                        </div>
-                        <div class="flex flex-col gap-2 justify-center min-w-[120px]">
-                            <!-- BOTÃO DE MANUTENÇÃO (Apenas se tiver falha) -->
-                            ${!aprovadoNoChecklist ? `<button onclick="abrirManutencao(${i.id}, '${i.placa}', '${statusManutencao}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-xs font-bold shadow"><i class="fas fa-tools"></i> GERENCIAR</button>` : ''}
-                            
-                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(i))}')" class="bg-slate-700 text-white px-3 py-2 rounded text-xs hover:bg-slate-600"><i class="fas fa-file-pdf"></i> PDF</button>
-                            <button onclick="apagarChecklist(${i.id})" class="text-red-400 hover:text-red-600 text-xs text-right mt-2">Excluir</button>
-                        </div>
-                    </div>`;
-                list.innerHTML += card;
-            });
-        }
-
-        // --- LÓGICA DE MANUTENÇÃO ---
-        function abrirManutencao(id, placa, statusAtual) {
-            document.getElementById('idChecklistAtual').value = id;
-            document.getElementById('modalPlaca').innerText = placa;
-            document.getElementById('novoStatus').value = statusAtual;
-            document.getElementById('notasManutencao').value = ''; // Limpa notas antigas por simplicidade
-            abrir('modalManutencao');
-        }
-
-        async function salvarManutencao() {
-            const id = document.getElementById('idChecklistAtual').value;
-            const status = document.getElementById('novoStatus').value;
-            const notas = document.getElementById('notasManutencao').value;
-
-            const { error } = await sb.from('checklists').update({ 
-                status_manutencao: status,
-                notas_manutencao: notas
-            }).match({ id: id });
-
-            if(error) alert("Erro ao atualizar!");
-            else {
-                alert("Status atualizado!");
-                fechar('modalManutencao');
-                carregarDados();
+        function recuperarRascunho() {
+            const rascunho = localStorage.getItem('rascunho_checklist');
+            if(rascunho) {
+                const d = JSON.parse(rascunho);
+                document.getElementById('placa').value = d.placa || "";
+                document.getElementById('km').value = d.km || "";
+                document.getElementById('combustivel').value = d.combustivel || "Cheio";
+                document.getElementById('pneu_ok').value = d.pneu || "true";
+                document.getElementById('luzes_ok').value = d.luzes || "true";
+                document.getElementById('fluidos_ok').value = d.fluidos || "true";
+                document.getElementById('lataria_ok').value = d.lataria || "true";
+                document.getElementById('interior_ok').value = d.interior || "true";
+                document.getElementById('observacao').value = d.obs || "";
+                
+                document.getElementById('statusRascunho').classList.remove('hidden');
+                setTimeout(() => document.getElementById('statusRascunho').classList.add('hidden'), 5000);
             }
         }
 
-        // Filtro
-        function filtrar() {
-            const t = document.getElementById('busca').value.toUpperCase();
-            renderizar(dadosGlobais.filter(d => d.placa.includes(t)));
+        async function carregarUsuarios() {
+            const s = document.getElementById('loginUsuario');
+            const { data } = await sb.from('funcionarios').select('*').order('nome');
+            s.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(u => s.innerHTML += `<option value="${u.nome}" data-pin="${u.pin}">${u.nome}</option>`);
         }
-
-        // PDF (Com status atualizado)
-        function gerarPDF(d) {
-            const i = JSON.parse(decodeURIComponent(d));
-            const check = (v) => (v!==false) ? '<b style="color:green">OK</b>' : '<b style="color:red">FALHA</b>';
-            const w = window.open('','','width=800,height=1100');
-            w.document.write(`<html><body style="font-family:sans-serif;padding:40px">
-                <div style="border-bottom:2px solid #333;margin-bottom:20px"><h1>RELATÓRIO #${i.id}</h1></div>
-                <p><b>VEÍCULO:</b> ${i.placa} | <b>CONDUTOR:</b> ${i.motorista}</p>
-                <p><b>DATA:</b> ${new Date(i.created_at).toLocaleString()}</p>
-                <hr>
-                <h3>INSPEÇÃO</h3>
-                <p>Pneus: ${check(i.pneu_ok)} | Luzes: ${check(i.luzes_ok)}</p>
-                <p>Fluídos: ${check(i.fluidos_ok)} | Lataria: ${check(i.lataria_ok)}</p>
-                <p>Interior: ${check(i.interior_ok)}</p>
-                <hr>
-                <p><b>OBSERVAÇÕES DO MOTORISTA:</b> ${i.observacao || '-'}</p>
-                <p><b>STATUS DA OFICINA:</b> ${i.status_manutencao || 'PENDENTE'}</p>
-                <p><b>NOTAS DA OFICINA:</b> ${i.notas_manutencao || '-'}</p>
-                <br><img src="${i.foto_url}" style="max-width:100%;max-height:300px">
-                <script>setTimeout(()=>window.print(),1000)<\/script>
-            </body></html>`);
+        function fazerLogin() {
+            const s = document.getElementById('loginUsuario');
+            const pin = document.getElementById('loginPin').value;
+            const user = s.value;
+            const realPin = s.options[s.selectedIndex].getAttribute('data-pin');
+            if(user && pin === realPin) { motoristaAtual = user; localStorage.setItem('usuario_logado', user); entrarNoSistema(); }
+            else alert("PIN Incorreto!");
         }
+        function entrarNoSistema() {
+            document.getElementById('telaLogin').classList.add('hidden');
+            document.getElementById('appConteudo').classList.remove('hidden');
+            document.getElementById('labelMotorista').innerText = "Motorista: " + motoristaAtual;
+            setTimeout(() => { configurarCanvas(); recuperarRascunho(); }, 500); // Tenta recuperar dados ao entrar
+        }
+        function sair() { localStorage.removeItem('usuario_logado'); window.location.reload(); }
 
-        // Modais (Padrão)
-        function abrir(id, cb) { document.getElementById(id).classList.remove('hidden'); if(cb) cb(); }
-        function fechar(id) { document.getElementById(id).classList.add('hidden'); }
-        async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`)}
-        async function addFrota(){const p=document.getElementById('nPlaca').value.toUpperCase();if(p){await sb.from('frota').insert({placa:p});loadFrota();document.getElementById('nPlaca').value=''}}
-        async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`)}
-        async function addEquipe(){const n=document.getElementById('nNome').value.toUpperCase();const p=document.getElementById('nPin').value;if(n&&p){await sb.from('funcionarios').insert({nome:n,pin:p});loadEquipe();document.getElementById('nNome').value=''}}
-        async function del(t,id,cb){if(confirm("Apagar?")){await sb.from(t).delete().match({id});cb()}}
-        async function apagarChecklist(id){if(confirm("Excluir?")){await sb.from('checklists').delete().match({id});carregarDados()}}
+        async function carregarFrota() {
+            const s = document.getElementById('placa');
+            const { data } = await sb.from('frota').select('*').order('placa');
+            if(data) data.forEach(v => s.innerHTML += `<option value="${v.placa}">${v.placa} - ${v.modelo}</option>`);
+        }
+        function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
+
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let writingMode = false;
+        function configurarCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio; canvas.height = canvas.offsetHeight * ratio;
+            ctx.scale(ratio, ratio); ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+        }
+        window.addEventListener("resize", configurarCanvas);
+        const getPos = (e) => { const rect = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - rect.left, y: t.clientY - rect.top }; }
+        const start = (e) => { writingMode = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); e.preventDefault(); }
+        const end = (e) => { writingMode = false; e.preventDefault(); }
+        const move = (e) => { if(!writingMode) return; const {x,y} = getPos(e); ctx.lineTo(x,y); ctx.stroke(); e.preventDefault(); }
+        canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchend', end, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false});
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mouseup', end); canvas.addEventListener('mousemove', move);
+        function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        async function enviarDados() {
+            const btn = document.getElementById('btnEnviar');
+            const status = document.getElementById('status');
+            
+            if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) 
+                return alert("Preencha Placa, KM e Foto!");
+
+            btn.disabled = true; btn.innerHTML = 'ENVIANDO...'; btn.classList.add('opacity-50'); status.innerText = "Localizando...";
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    status.innerText = "Enviando imagens...";
+                    const arqFoto = document.getElementById('foto').files[0];
+                    const nomeFoto = `foto_${Date.now()}.jpg`;
+                    await sb.storage.from('evidencias').upload(nomeFoto, arqFoto);
+                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
+
+                    const assBlob = await new Promise(r => canvas.toBlob(r));
+                    const nomeAss = `ass_${Date.now()}.png`;
+                    await sb.storage.from('evidencias').upload(nomeAss, assBlob);
+                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
+
+                    status.innerText = "Salvando dados...";
+                    await sb.from('checklists').insert({
+                        placa: document.getElementById('placa').value,
+                        motorista: motoristaAtual,
+                        km: document.getElementById('km').value,
+                        combustivel: document.getElementById('combustivel').value,
+                        pneu_ok: document.getElementById('pneu_ok').value === 'true',
+                        luzes_ok: document.getElementById('luzes_ok').value === 'true',
+                        fluidos_ok: document.getElementById('fluidos_ok').value === 'true',
+                        lataria_ok: document.getElementById('lataria_ok').value === 'true',
+                        interior_ok: document.getElementById('interior_ok').value === 'true',
+                        observacao: document.getElementById('observacao').value,
+                        foto_url: fotoUrl, assinatura_url: assUrl,
+                        latitude: pos.coords.latitude, longitude: pos.coords.longitude
+                    });
+                    
+                    // Limpa rascunho após sucesso
+                    localStorage.removeItem('rascunho_checklist');
+                    
+                    alert("✅ REGISTRO ENVIADO!");
+                    window.location.reload();
+                } catch(e) { alert("Erro: " + e.message); btn.disabled = false; btn.innerHTML = 'ENVIAR'; }
+            }, () => { alert("Ative o GPS!"); btn.disabled = false; }, {enableHighAccuracy:true});
+        }
     </script>
 </body>
 </html>
