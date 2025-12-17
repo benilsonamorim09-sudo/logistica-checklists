@@ -145,4 +145,66 @@
                 s.innerHTML = '<option value="">Selecione...</option>';
                 if(data) data.forEach(v => s.innerHTML += `<option value="${v.placa}">${v.placa} - ${v.modelo}</option>`);
             } catch(e) {
-                s.innerHTML =
+                s.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        function fazerLogin() { 
+            const s = document.getElementById('loginUsuario'); 
+            const pin = document.getElementById('loginPin').value; 
+            const user = s.value;
+            if(!user) return alert("Selecione um motorista! Se a lista estiver vazia, cadastre no Admin.");
+            
+            const realPin = s.options[s.selectedIndex].getAttribute('data-pin');
+            if(user && pin === realPin) { motoristaAtual = user; localStorage.setItem('usuario_logado', user); mostrarMenu(); }
+            else alert("PIN Incorreto!");
+        }
+
+        // Funções Padrão
+        function mostrarMenu() { document.getElementById('telaLogin').classList.add('hidden'); document.getElementById('appConteudo').classList.add('hidden'); document.getElementById('telaMenu').classList.remove('hidden'); document.getElementById('nomeMenu').innerText = motoristaAtual; }
+        function iniciarOperacao(t) { operacaoAtual=t; document.getElementById('telaMenu').classList.add('hidden'); document.getElementById('appConteudo').classList.remove('hidden'); document.getElementById('tituloOperacao').innerText = t==='SAIDA'?'CHECKLIST SAÍDA':'CHECKLIST RETORNO'; document.getElementById('labelMotorista').innerText = motoristaAtual; setTimeout(()=>{configurarCanvas();recuperarRascunho()},500); }
+        function voltarMenu() { document.getElementById('appConteudo').classList.add('hidden'); document.getElementById('telaMenu').classList.remove('hidden'); }
+        function sair() { localStorage.removeItem('usuario_logado'); window.location.reload(); }
+        function salvarRascunho() { const d={placa:document.getElementById('placa').value, km:document.getElementById('km').value, obs:document.getElementById('observacao').value}; localStorage.setItem('rascunho',JSON.stringify(d)); }
+        function recuperarRascunho() { const r=localStorage.getItem('rascunho'); if(r){const d=JSON.parse(r); document.getElementById('placa').value=d.placa||""; document.getElementById('km').value=d.km||""; document.getElementById('observacao').value=d.obs||""; } }
+        function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
+        function atualizarConexao() { const b=document.getElementById('offlineBanner'); const btn=document.getElementById('btnEnviar'); if(navigator.onLine){b.classList.add('hidden'); btn.disabled=false; btn.classList.remove('opacity-50');}else{b.classList.remove('hidden'); btn.disabled=true; btn.classList.add('opacity-50');} }
+
+        const canvas=document.getElementById('signature-pad'); const ctx=canvas.getContext('2d'); let writingMode=false;
+        function configurarCanvas() { const r=Math.max(window.devicePixelRatio||1,1); canvas.width=canvas.offsetWidth*r; canvas.height=canvas.offsetHeight*r; ctx.scale(r,r); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.lineWidth=3; ctx.lineCap='round'; ctx.strokeStyle='#000'; }
+        window.addEventListener("resize", configurarCanvas);
+        const getPos=(e)=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}};
+        const start=(e)=>{writingMode=true;ctx.beginPath();const{x,y}=getPos(e);ctx.moveTo(x,y);e.preventDefault()};
+        const end=(e)=>{writingMode=false;e.preventDefault()};
+        const move=(e)=>{if(!writingMode)return;const{x,y}=getPos(e);ctx.lineTo(x,y);ctx.stroke();e.preventDefault()};
+        canvas.addEventListener('touchstart',start,{passive:false}); canvas.addEventListener('touchend',end,{passive:false}); canvas.addEventListener('touchmove',move,{passive:false});
+        canvas.addEventListener('mousedown',start); canvas.addEventListener('mouseup',end); canvas.addEventListener('mousemove',move);
+        function limparAssinatura(){ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,canvas.width,canvas.height);}
+
+        async function enviarDados() {
+            const btn=document.getElementById('btnEnviar');
+            if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) return alert("Preencha Placa, KM e Foto!");
+            btn.disabled=true; btn.innerHTML='ENVIANDO...'; btn.classList.add('opacity-50');
+            navigator.geolocation.getCurrentPosition(async (pos)=>{
+                try {
+                    const arqFoto = document.getElementById('foto').files[0];
+                    const nomeFoto = `foto_${Date.now()}.jpg`;
+                    await sb.storage.from('evidencias').upload(nomeFoto, arqFoto);
+                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
+                    const assBlob = await new Promise(r=>canvas.toBlob(r, 'image/jpeg')); const nomeAss = `ass_${Date.now()}.jpg`;
+                    await sb.storage.from('evidencias').upload(nomeAss, assBlob);
+                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
+                    await sb.from('checklists').insert({
+                        tipo_operacao:operacaoAtual, placa:document.getElementById('placa').value, motorista:motoristaAtual, km:document.getElementById('km').value, combustivel:document.getElementById('combustivel').value,
+                        pneu_ok:document.getElementById('pneu_ok').value==='true', luzes_ok:document.getElementById('luzes_ok').value==='true', fluidos_ok:document.getElementById('fluidos_ok').value==='true',
+                        lataria_ok:document.getElementById('lataria_ok').value==='true', interior_ok:document.getElementById('interior_ok').value==='true',
+                        observacao:document.getElementById('observacao').value, foto_url:fotoUrl, assinatura_url:assUrl, latitude:pos.coords.latitude, longitude:pos.coords.longitude
+                    });
+                    localStorage.removeItem('rascunho'); alert("✅ SUCESSO!"); voltarMenu();
+                    btn.disabled=false; btn.innerHTML='ENVIAR REGISTRO'; btn.classList.remove('opacity-50'); document.getElementById('foto').value=""; limparAssinatura();
+                } catch(e){ alert("Erro: "+e.message); btn.disabled=false; }
+            }, ()=>{alert("Ative GPS"); btn.disabled=false;}, {enableHighAccuracy:true});
+        }
+    </script>
+</body>
+</html>
