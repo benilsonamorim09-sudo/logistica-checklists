@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Logística v7</title>
+    <title>App Logística v9</title>
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Bloqueia rolagem da tela apenas dentro do canvas para facilitar assinatura */
-        canvas { touch-action: none; background-color: #ffffff; cursor: crosshair; }
-    </style>
+    <style> canvas { touch-action: none; background-color: #ffffff; cursor: crosshair; } </style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
 
     <!-- TELA LOGIN -->
     <div id="telaLogin" class="fixed inset-0 bg-blue-900 z-50 flex flex-col items-center justify-center p-6">
         <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-2xl text-center">
-            <h1 class="text-2xl font-bold text-blue-900 mb-2"><i class="fas fa-lock"></i> ACESSO SEGURO</h1>
+            
+            <!-- LOGO GRANDE LOGIN -->
+            <img src="https://cdn-icons-png.flaticon.com/512/2830/2830305.png" class="w-24 h-24 mx-auto mb-4 logo-img">
+            
+            <h1 class="text-2xl font-bold text-blue-900 mb-2">ACESSO RESTRITO</h1>
             <p class="text-gray-500 text-sm mb-6">Identifique-se para iniciar</p>
 
             <div class="text-left mb-4">
@@ -33,7 +34,7 @@
             </div>
 
             <div class="text-left mb-6">
-                <label class="text-xs font-bold text-gray-500 uppercase">PIN (Senha)</label>
+                <label class="text-xs font-bold text-gray-500 uppercase">PIN</label>
                 <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border border-gray-300 rounded-lg text-center text-3xl tracking-[0.5em] font-bold" placeholder="••••">
             </div>
 
@@ -45,27 +46,27 @@
     <div id="appConteudo" class="hidden">
         
         <div class="bg-blue-900 p-6 shadow-lg rounded-b-3xl flex justify-between items-center text-white">
-            <div>
-                <h1 class="font-bold text-xl"><i class="fas fa-clipboard-check"></i> VISTORIA</h1>
-                <p id="labelMotorista" class="text-blue-200 text-xs mt-1">Olá, ...</p>
+            <div class="flex items-center gap-3">
+                <!-- LOGO PEQUENO HEADER -->
+                <img src="https://cdn-icons-png.flaticon.com/512/2830/2830305.png" class="w-10 h-10 bg-white rounded-full p-1 logo-img">
+                <div>
+                    <h1 class="font-bold text-xl leading-none">VISTORIA</h1>
+                    <p id="labelMotorista" class="text-blue-200 text-xs mt-1">Motorista...</p>
+                </div>
             </div>
             <button onclick="sair()" class="bg-blue-800 px-3 py-1 rounded text-xs border border-blue-600">SAIR</button>
         </div>
 
         <div class="p-4 space-y-5 max-w-md mx-auto -mt-4">
             
-            <!-- Veículo -->
             <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
                 <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">1. Veículo</h3>
                 <div class="relative">
-                    <select id="placa" class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl text-xl font-bold text-center uppercase appearance-none">
-                        <option value="">Escolher Placa...</option>
-                    </select>
+                    <select id="placa" class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl text-xl font-bold text-center uppercase appearance-none"><option value="">Carregando...</option></select>
                     <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div>
                 </div>
             </div>
 
-            <!-- Dados -->
             <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
                 <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">2. Dados</h3>
                 <div class="grid grid-cols-2 gap-4">
@@ -88,7 +89,6 @@
                 </div>
             </div>
 
-            <!-- Foto -->
             <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
                 <h3 class="text-blue-900 font-bold text-sm uppercase mb-2">3. Evidência</h3>
                 <label class="block w-full p-6 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition active:bg-blue-100">
@@ -100,14 +100,11 @@
                 <textarea id="observacao" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Observações (Opcional)"></textarea>
             </div>
 
-            <!-- ASSINATURA GRANDE -->
             <div class="bg-white p-4 rounded-xl shadow-md border-2 border-gray-100">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-blue-900 font-bold text-sm uppercase"><i class="fas fa-pen-nib"></i> Assinatura</h3>
                     <button onclick="limparAssinatura()" class="bg-red-100 text-red-600 px-3 py-1 rounded text-xs font-bold hover:bg-red-200">LIMPAR</button>
                 </div>
-                
-                <!-- Container da Assinatura com altura fixa GRANDE -->
                 <div class="border-2 border-gray-300 rounded-lg overflow-hidden" style="height: 250px;">
                     <canvas id="signature-pad" class="w-full h-full"></canvas>
                 </div>
@@ -117,23 +114,30 @@
             <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center">
                 <span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i>
             </button>
-            <p id="status" class="text-center text-xs text-gray-400 mt-4 pb-4">v7.0 - Assinatura HD</p>
+            <p id="status" class="text-center text-xs text-gray-400 mt-4 pb-4">v9.0 - Com Logo</p>
         </div>
     </div>
 
     <script>
+        // --- COLOQUE O LINK DA SUA LOGO AQUI ---
+        const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2830/2830305.png";
+
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
         let motoristaAtual = "";
 
-        // Login
+        // Inicializa Logos e Sistema
         window.onload = async function() {
+            // Atualiza as imagens de logo dinamicamente
+            document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
+            
             carregarUsuarios(); carregarFrota(); configurarCanvas();
             const salvo = localStorage.getItem('usuario_logado');
             if(salvo) { motoristaAtual = salvo; entrarNoSistema(); }
         };
 
+        // Funções de Login, Frota e Assinatura (Iguais à versão anterior)
         async function carregarUsuarios() {
             const s = document.getElementById('loginUsuario');
             const { data } = await meuSupabase.from('funcionarios').select('*').order('nome');
@@ -152,11 +156,9 @@
             document.getElementById('telaLogin').classList.add('hidden');
             document.getElementById('appConteudo').classList.remove('hidden');
             document.getElementById('labelMotorista').innerText = "Motorista: " + motoristaAtual;
-            // Espera um pouco para o elemento aparecer e redimensiona o canvas
             setTimeout(configurarCanvas, 100);
         }
         function sair() { localStorage.removeItem('usuario_logado'); window.location.reload(); }
-
         async function carregarFrota() {
             const s = document.getElementById('placa');
             const { data } = await meuSupabase.from('frota').select('*').order('placa');
@@ -164,52 +166,35 @@
         }
         function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
 
-        // --- LÓGICA DE ASSINATURA CORRIGIDA ---
         const canvas = document.getElementById('signature-pad');
         const ctx = canvas.getContext('2d');
         let writingMode = false;
-
         function configurarCanvas() {
-            // Ajusta a resolução interna para telas retina/HD
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
             ctx.scale(ratio, ratio);
-            ctx.lineWidth = 3; // Linha mais grossa
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
         }
-
-        // Reconhece redimensionamento da tela (virar o celular)
         window.addEventListener("resize", configurarCanvas);
-
-        const getPos = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const t = e.touches ? e.touches[0] : e;
-            return { x: t.clientX - rect.left, y: t.clientY - rect.top };
-        }
+        const getPos = (e) => { const rect = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - rect.left, y: t.clientY - rect.top }; }
         const start = (e) => { writingMode = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); e.preventDefault(); }
         const end = (e) => { writingMode = false; e.preventDefault(); }
         const move = (e) => { if(!writingMode) return; const {x,y} = getPos(e); ctx.lineTo(x,y); ctx.stroke(); e.preventDefault(); }
-
-        canvas.addEventListener('touchstart', start, {passive:false});
-        canvas.addEventListener('touchend', end, {passive:false});
-        canvas.addEventListener('touchmove', move, {passive:false});
-        canvas.addEventListener('mousedown', start);
-        canvas.addEventListener('mouseup', end);
-        canvas.addEventListener('mousemove', move);
-
+        canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchend', end, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false});
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mouseup', end); canvas.addEventListener('mousemove', move);
         function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
         async function enviarDados() {
             const btn = document.getElementById('btnEnviar');
             const status = document.getElementById('status');
-            
             if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) 
                 return alert("Preencha Placa, KM e Foto!");
+            
+            // Verifica se assinou (Lógica simples: pixel check) - Opcional
+            // Aqui confiamos no motorista por enquanto
 
-            btn.disabled = true; btn.innerHTML = 'AGUARDE...'; btn.classList.add('opacity-50');
-            status.innerText = "Localizando...";
+            btn.disabled = true; btn.innerHTML = 'AGUARDE...'; btn.classList.add('opacity-50'); status.innerText = "Localizando...";
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
