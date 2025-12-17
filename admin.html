@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Logística v9</title>
+    <title>Admin Logística v10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -13,8 +13,7 @@
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <!-- LOGO MENU -->
-                <img src="" class="w-10 h-10 bg-white rounded-full p-1 logo-img">
+                <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
                 <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-slate-400">ADMIN</span></h1>
             </div>
             
@@ -35,7 +34,7 @@
         <div id="lista" class="space-y-4 text-center text-gray-400 mt-10">Carregando dados...</div>
     </div>
 
-    <!-- MODAIS IGUAIS -->
+    <!-- MODAIS -->
     <div id="modalFrota" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded shadow-xl w-96">
             <h2 class="font-bold mb-4">Gerenciar Frota</h2>
@@ -54,17 +53,15 @@
     </div>
 
     <script>
-        // --- COLOQUE O LINK DA SUA LOGO AQUI TAMBÉM ---
-        const LOGO_URL = "https://drive.google.com/file/d/1vgsKlgy1zJV0BY1ecuBpMPcc0LATyDxV/view?usp=drivesdk";
+        // LOGO DIRETA
+        const LOGO_URL = "https://drive.google.com/uc?export=view&id=1vgsKlgy1zJV0BY1ecuBpMPcc0LATyDxV";
 
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
 
         window.onload = function() {
-            // Atualiza logo do menu
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
-            
             if(prompt("Senha Admin:") !== "1234") return;
             carregarDados();
         }
@@ -88,18 +85,22 @@
                         <div class="flex-1">
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-lg text-slate-800">${i.placa}</h3>
-                                <span class="text-[10px] font-bold px-2 py-1 rounded ${i.pneu_ok?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">${i.pneu_ok?'APROVADO':'REPROVADO'}</span>
+                                <!-- Status Geral (Se tudo OK) -->
+                                <span class="text-[10px] font-bold px-2 py-1 rounded ${i.pneu_ok && i.luzes_ok && i.fluidos_ok ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${i.pneu_ok && i.luzes_ok && i.fluidos_ok ? 'APROVADO' : 'ATENÇÃO'}
+                                </span>
                             </div>
                             <p class="text-sm text-gray-600 font-bold">${i.motorista}</p>
                             <p class="text-xs text-gray-400 mt-1">${new Date(i.created_at).toLocaleString()}</p>
+                            
                             <div class="mt-2 text-xs bg-gray-50 p-2 rounded flex gap-4 border border-gray-100">
                                 <span><b>KM:</b> ${i.km}</span> <span><b>TANQUE:</b> ${i.combustivel}</span>
                             </div>
-                            ${i.observacao ? `<p class="mt-2 text-xs text-gray-500 italic truncate border-l-2 border-orange-300 pl-2">Obs: ${i.observacao}</p>` : ''}
                         </div>
+
                         <div class="flex md:flex-col gap-2 justify-center min-w-[100px]">
                             <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 py-2 rounded text-sm hover:bg-slate-700 w-full"><i class="fas fa-file-pdf"></i> PDF</button>
-                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-center text-sm hover:bg-blue-100 w-full"><i class="fas fa-map-marker-alt"></i> Mapa</a>
+                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-center text-sm hover:bg-blue-100 w-full"><i class="fas fa-map-marker-alt"></i></a>
                             <button onclick="apagarChecklist(${i.id})" class="bg-red-50 text-red-500 px-3 py-2 rounded text-sm hover:bg-red-100 w-full"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>`;
@@ -113,12 +114,14 @@
             carregarDados();
         }
 
-        // --- PDF COM LOGO NO CABEÇALHO ---
         function gerarPDF(d) {
             const i = JSON.parse(decodeURIComponent(d));
             const dataF = new Date(i.created_at).toLocaleString('pt-BR');
-            const obs = i.observacao || "Nenhuma observação.";
+            const obs = i.observacao || "Nenhuma.";
             
+            // Função auxiliar para ícone OK/Erro
+            const check = (val) => val ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold">FALHA</span>';
+
             const htmlAss = i.assinatura_url 
                 ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` 
                 : `<div class="assinatura-box"><p style="color:red">[SEM ASSINATURA]</p></div>`;
@@ -130,65 +133,69 @@
                     <title>Relatório ${i.placa}</title>
                     <style>
                         body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-                        .header { border-bottom: 3px solid #1e293b; padding-bottom: 20px; margin-bottom: 30px; display: flex; align-items: center; }
+                        .header { border-bottom: 3px solid #1e293b; padding-bottom: 20px; margin-bottom: 20px; display: flex; align-items: center; }
                         .logo-pdf { height: 60px; margin-right: 20px; }
-                        .titulo { flex: 1; }
                         .titulo h1 { margin: 0; color: #1e293b; font-size: 24px; text-transform: uppercase; }
-                        .meta { text-align: right; font-size: 12px; color: #666; }
-                        .status-banner { text-align: center; padding: 10px; margin-bottom: 30px; font-weight: bold; font-size: 18px; border-radius: 4px; border: 1px solid #ccc; }
-                        .aprovado { background-color: #dcfce7; color: #166534; border-color: #86efac; }
-                        .reprovado { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-                        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-                        .box { background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
-                        .label { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px; }
-                        .valor { font-size: 16px; font-weight: 600; color: #0f172a; }
-                        .obs-box { background: #fff7ed; border: 1px solid #fdba74; padding: 15px; border-radius: 6px; margin-bottom: 30px; }
-                        .foto-container { text-align: center; margin-bottom: 30px; border: 2px dashed #cbd5e1; padding: 10px; border-radius: 8px; }
-                        .foto-main { max-height: 400px; max-width: 100%; border-radius: 4px; }
-                        .assinatura-box { text-align: center; margin-top: 50px; }
-                        .ass-img { height: 80px; margin-bottom: -10px; }
-                        .linha { color: #94a3b8; font-weight: bold; }
-                        .footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 10px; color: #94a3b8; }
+                        .meta { text-align: right; font-size: 12px; color: #666; margin-left: auto; }
+                        
+                        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+                        .box { background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
+                        .label { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; display: block; }
+                        .valor { font-size: 14px; font-weight: 600; color: #0f172a; }
+
+                        .checklist-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        .checklist-table th { text-align: left; background: #e2e8f0; padding: 8px; font-size: 11px; }
+                        .checklist-table td { border-bottom: 1px solid #eee; padding: 8px; font-size: 13px; }
+
+                        .obs-box { background: #fff7ed; border: 1px solid #fdba74; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
+                        .foto-container { text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0; padding: 5px; }
+                        .foto-main { max-height: 350px; max-width: 100%; }
+                        
+                        .assinatura-box { text-align: center; margin-top: 30px; }
+                        .ass-img { height: 70px; }
+                        .linha { color: #ccc; }
+                        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; font-size: 9px; color: #999; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
                         <img src="${LOGO_URL}" class="logo-pdf">
-                        <div class="titulo"><h1>Relatório de Vistoria</h1></div>
+                        <div class="titulo"><h1>Vistoria Técnica</h1></div>
                         <div class="meta">ID: #${i.id}<br>${dataF}</div>
                     </div>
 
-                    <div class="status-banner ${i.pneu_ok ? 'aprovado' : 'reprovado'}">
-                        STATUS: ${i.pneu_ok ? 'VEÍCULO APROVADO' : 'VEÍCULO REPROVADO'}
-                    </div>
-
-                    <div class="grid">
+                    <div class="grid-info">
                         <div class="box"><span class="label">Veículo</span><span class="valor">${i.placa}</span></div>
-                        <div class="box"><span class="label">Motorista</span><span class="valor">${i.motorista}</span></div>
-                        <div class="box"><span class="label">Odômetro</span><span class="valor">${i.km} KM</span></div>
+                        <div class="box"><span class="label">Condutor</span><span class="valor">${i.motorista}</span></div>
+                        <div class="box"><span class="label">KM Atual</span><span class="valor">${i.km}</span></div>
                         <div class="box"><span class="label">Combustível</span><span class="valor">${i.combustivel}</span></div>
                     </div>
 
-                    <div class="obs-box">
-                        <span class="label" style="color:#c2410c">OBSERVAÇÕES</span>
-                        <p class="obs-text">"${obs}"</p>
-                    </div>
+                    <h3>Itens Inspecionados</h3>
+                    <table class="checklist-table">
+                        <tr><th>ITEM</th><th>STATUS</th></tr>
+                        <tr><td>Estado dos Pneus</td><td>${check(i.pneu_ok)}</td></tr>
+                        <tr><td>Luzes e Sinalização</td><td>${check(i.luzes_ok)}</td></tr>
+                        <tr><td>Fluídos (Óleo/Água)</td><td>${check(i.fluidos_ok)}</td></tr>
+                        <tr><td>Lataria/Funilaria</td><td>${check(i.lataria_ok)}</td></tr>
+                        <tr><td>Limpeza Interna</td><td>${check(i.interior_ok)}</td></tr>
+                    </table>
+
+                    <div class="obs-box"><b>OBSERVAÇÕES:</b> "${obs}"</div>
 
                     <div class="foto-container">
-                        <span class="label" style="margin-bottom:10px">EVIDÊNCIA FOTOGRÁFICA</span><br>
                         <img src="${i.foto_url}" class="foto-main">
                     </div>
 
                     ${htmlAss}
 
-                    <div class="footer">Documento gerado eletronicamente via Sistema Logística Mobile.<br>GPS: ${i.latitude}, ${i.longitude}</div>
+                    <div class="footer">Localização GPS: ${i.latitude}, ${i.longitude}</div>
                     <script>setTimeout(() => { window.print(); }, 1500);<\/script>
                 </body>
                 </html>
             `);
         }
 
-        // Modais (Iguais)
         function abrir(id, cb) { document.getElementById(id).classList.remove('hidden'); if(cb) cb(); }
         function fechar(id) { document.getElementById(id).classList.add('hidden'); }
         async function loadFrota() { const l=document.getElementById('lFrota'); l.innerHTML=''; const {data}=await sb.from('frota').select('*').order('placa'); data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`); }
