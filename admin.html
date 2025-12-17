@@ -3,112 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Logística v12</title>
-    <!-- Tailwind CSS -->
+    <title>S.G.O - Gestão de Ocorrências</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Chart.js (Biblioteca de Gráficos) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
 
-    <!-- MENU -->
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-md">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
-                <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-slate-400">BI</span></h1>
+                <h1 class="font-bold text-lg">LOGÍSTICA <span class="text-blue-400">CONTROL</span></h1>
             </div>
             
             <div class="flex gap-2 text-sm">
                 <button onclick="abrir('modalFrota', loadFrota)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-truck"></i> Frota</button>
                 <button onclick="abrir('modalEquipe', loadEquipe)" class="bg-slate-700 px-3 py-1 rounded hover:bg-slate-600"><i class="fas fa-users"></i> Equipe</button>
-                <button onclick="carregarDados()" class="bg-green-600 px-3 py-1 rounded hover:bg-green-500"><i class="fas fa-sync"></i> Atualizar</button>
+                <button onclick="carregarDados()" class="bg-green-600 px-3 py-1 rounded hover:bg-green-500"><i class="fas fa-sync"></i></button>
             </div>
         </div>
     </nav>
 
     <div class="max-w-7xl mx-auto p-4 space-y-6">
-
-        <!-- ÁREA DE KPIs (Números Grandes) -->
+        
+        <!-- DASHBOARD RÁPIDO -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded shadow border-l-4 border-blue-500">
-                <span class="text-xs font-bold text-gray-400 uppercase">Total Vistorias</span>
-                <p id="kpiTotal" class="text-2xl font-bold text-slate-800">0</p>
+            <div class="bg-white p-4 rounded border-l-4 border-red-500 shadow">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Pendências Críticas</span>
+                <p id="kpiPendente" class="text-2xl font-bold text-red-600">0</p>
             </div>
-            <div class="bg-white p-4 rounded shadow border-l-4 border-green-500">
-                <span class="text-xs font-bold text-gray-400 uppercase">Aprovados</span>
+            <div class="bg-white p-4 rounded border-l-4 border-yellow-500 shadow">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Em Manutenção</span>
+                <p id="kpiAndamento" class="text-2xl font-bold text-yellow-600">0</p>
+            </div>
+            <div class="bg-white p-4 rounded border-l-4 border-green-500 shadow">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Total Aprovados</span>
                 <p id="kpiAprovados" class="text-2xl font-bold text-green-600">0</p>
             </div>
-            <div class="bg-white p-4 rounded shadow border-l-4 border-red-500">
-                <span class="text-xs font-bold text-gray-400 uppercase">Reprovados</span>
-                <p id="kpiReprovados" class="text-2xl font-bold text-red-600">0</p>
-            </div>
-            <div class="bg-white p-4 rounded shadow border-l-4 border-orange-500">
-                <span class="text-xs font-bold text-gray-400 uppercase">Taxa Aprovação</span>
-                <p id="kpiTaxa" class="text-2xl font-bold text-orange-600">0%</p>
+            <div class="bg-white p-4 rounded border-l-4 border-blue-500 shadow">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Vistorias Hoje</span>
+                <p id="kpiTotal" class="text-2xl font-bold text-slate-700">0</p>
             </div>
         </div>
 
-        <!-- ÁREA DE GRÁFICOS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Gráfico 1: Status Geral -->
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Status da Frota</h3>
-                <div class="h-64 flex justify-center">
-                    <canvas id="chartStatus"></canvas>
-                </div>
-            </div>
-            <!-- Gráfico 2: Principais Defeitos -->
-            <div class="bg-white p-4 rounded shadow">
-                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Principais Falhas</h3>
-                <div class="h-64 flex justify-center">
-                    <canvas id="chartFalhas"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- LISTA DE REGISTROS -->
+        <!-- LISTA -->
         <div>
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-xl text-slate-700">Histórico Recente</h3>
-                <input id="busca" onkeyup="filtrarLista()" placeholder="Filtrar placa..." class="border p-2 rounded text-sm uppercase">
+                <h3 class="font-bold text-slate-700">Painel de Controle</h3>
+                <input id="busca" onkeyup="filtrar()" placeholder="Filtrar placa..." class="border p-2 rounded text-sm uppercase w-40">
             </div>
-            <div id="lista" class="space-y-4 text-center text-gray-400">Carregando dados...</div>
+            <div id="lista" class="space-y-4 text-center text-gray-400">Carregando...</div>
         </div>
+    </div>
 
+    <!-- MODAL MANUTENÇÃO (NOVO) -->
+    <div id="modalManutencao" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded shadow-xl w-96">
+            <h2 class="font-bold mb-4 text-lg"><i class="fas fa-tools text-gray-600"></i> Gestão de Ocorrência</h2>
+            <p id="modalPlaca" class="text-2xl font-bold text-slate-800 mb-4 text-center">ABC-1234</p>
+            
+            <label class="text-xs font-bold text-gray-500">STATUS ATUAL</label>
+            <select id="novoStatus" class="w-full border p-2 rounded mb-4 font-bold">
+                <option value="PENDENTE">🔴 PENDENTE (Crítico)</option>
+                <option value="EM_ANALISE">🟡 EM MANUTENÇÃO (Oficina)</option>
+                <option value="CONCLUIDO">🟢 CONCLUÍDO (Liberado)</option>
+            </select>
+
+            <label class="text-xs font-bold text-gray-500">NOTAS DA OFICINA</label>
+            <textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm" placeholder="Ex: Trocado pneu dianteiro esquerdo..."></textarea>
+            
+            <input type="hidden" id="idChecklistAtual">
+            
+            <button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold mb-2">SALVAR ALTERAÇÕES</button>
+            <button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-500 text-sm">Cancelar</button>
+        </div>
     </div>
 
-    <!-- MODAIS (Iguais aos anteriores) -->
-    <div id="modalFrota" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4">Gerenciar Frota</h2>
-            <div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded">+</button></div>
-            <ul id="lFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
-            <button onclick="fechar('modalFrota')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
-        </div>
-    </div>
-    <div id="modalEquipe" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded shadow-xl w-96">
-            <h2 class="font-bold mb-4">Gerenciar Equipe</h2>
-            <div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-20 text-center" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded">+</button></div>
-            <ul id="lEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul>
-            <button onclick="fechar('modalEquipe')" class="w-full mt-2 text-red-500 text-sm">Fechar</button>
-        </div>
-    </div>
+    <!-- MODAIS ANTIGOS (Frota/Equipe) - Mantidos compactos -->
+    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-80"><h2 class="font-bold mb-4">Frota</h2><div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2">+</button></div><ul id="lFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul><button onclick="fechar('modalFrota')" class="w-full mt-2 text-red-500">Fechar</button></div></div>
+    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-80"><h2 class="font-bold mb-4">Equipe</h2><div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-20" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2">+</button></div><ul id="lEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul><button onclick="fechar('modalEquipe')" class="w-full mt-2 text-red-500">Fechar</button></div></div>
 
     <script>
         const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/10832/10832132.png";
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
-        
         let dadosGlobais = [];
-        let chart1 = null;
-        let chart2 = null;
 
         window.onload = function() {
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
@@ -117,167 +99,153 @@
         }
 
         async function carregarDados() {
-            const list = document.getElementById('lista');
-            // Carrega mais dados para os gráficos ficarem bonitos (100 últimos)
-            const { data } = await sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(100);
-            
+            const { data } = await sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(60);
             dadosGlobais = data;
+            renderizar(data);
             atualizarKPIs(data);
-            renderizarLista(data);
         }
 
         function atualizarKPIs(data) {
-            // 1. Cálculos Básicos
-            const total = data.length;
-            // Um veículo é aprovado se TODOS os itens forem true (ou null, assumindo ok para legados)
-            const aprovados = data.filter(i => 
-                (i.pneu_ok !== false) && (i.luzes_ok !== false) && (i.fluidos_ok !== false) && 
-                (i.lataria_ok !== false) && (i.interior_ok !== false)
-            ).length;
-            const reprovados = total - aprovados;
-            const taxa = total > 0 ? Math.round((aprovados / total) * 100) : 0;
-
-            // Atualiza tela
-            document.getElementById('kpiTotal').innerText = total;
-            document.getElementById('kpiAprovados').innerText = aprovados;
-            document.getElementById('kpiReprovados').innerText = reprovados;
-            document.getElementById('kpiTaxa').innerText = taxa + "%";
-
-            // 2. Contagem de Falhas Específicas
-            let falhas = { 'Pneu': 0, 'Luzes': 0, 'Fluídos': 0, 'Lataria': 0, 'Interior': 0 };
-            data.forEach(i => {
-                if(i.pneu_ok === false) falhas['Pneu']++;
-                if(i.luzes_ok === false) falhas['Luzes']++;
-                if(i.fluidos_ok === false) falhas['Fluídos']++;
-                if(i.lataria_ok === false) falhas['Lataria']++;
-                if(i.interior_ok === false) falhas['Interior']++;
-            });
-
-            gerarGraficos(aprovados, reprovados, falhas);
-        }
-
-        function gerarGraficos(aprov, reprov, objFalhas) {
-            // Gráfico 1: Pizza
-            const ctx1 = document.getElementById('chartStatus').getContext('2d');
-            if(chart1) chart1.destroy();
-            chart1 = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Aprovados', 'Reprovados'],
-                    datasets: [{
-                        data: [aprov, reprov],
-                        backgroundColor: ['#22c55e', '#ef4444'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Gráfico 2: Barras
-            const ctx2 = document.getElementById('chartFalhas').getContext('2d');
-            if(chart2) chart2.destroy();
-            chart2 = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(objFalhas),
-                    datasets: [{
-                        label: 'Qtd. de Falhas',
-                        data: Object.values(objFalhas),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: {display: false} }
-                }
-            });
-        }
-
-        function renderizarLista(data) {
-            const list = document.getElementById('lista');
-            list.innerHTML = '';
+            // Conta quantos estão em cada status
+            const pendentes = data.filter(i => !isAprovado(i) && (i.status_manutencao === 'PENDENTE' || !i.status_manutencao)).length;
+            const manutencao = data.filter(i => i.status_manutencao === 'EM_ANALISE').length;
+            const aprovados = data.filter(i => isAprovado(i) || i.status_manutencao === 'CONCLUIDO').length;
             
-            if(data.length === 0) { list.innerHTML = '<p class="text-gray-400">Vazio.</p>'; return; }
+            document.getElementById('kpiPendente').innerText = pendentes;
+            document.getElementById('kpiAndamento').innerText = manutencao;
+            document.getElementById('kpiAprovados').innerText = aprovados;
+            document.getElementById('kpiTotal').innerText = data.length;
+        }
 
+        function isAprovado(i) {
+            // Retorna true se todos os itens de checklist forem true
+            return (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
+        }
+
+        function renderizar(data) {
+            const list = document.getElementById('lista'); list.innerHTML = '';
+            
             data.forEach(i => {
-                const pdfData = encodeURIComponent(JSON.stringify(i));
-                const tudoOk = (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
-                
-                const cardClass = tudoOk ? "border-green-500" : "border-red-500 bg-red-50";
-                const statusBadge = tudoOk 
-                    ? `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded border border-green-200">APROVADO</span>`
-                    : `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded border border-red-700 animate-pulse">MANUTENÇÃO</span>`;
+                const aprovadoNoChecklist = isAprovado(i);
+                let statusManutencao = i.status_manutencao || 'PENDENTE';
+                if(aprovadoNoChecklist) statusManutencao = 'CONCLUIDO'; // Se aprovou no check, considera concluído
+
+                // Define Cores do Card
+                let borderClass = "border-green-500";
+                let bgClass = "bg-white";
+                let statusLabel = `<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded">OK</span>`;
+
+                if(!aprovadoNoChecklist) {
+                    if(statusManutencao === 'PENDENTE') {
+                        borderClass = "border-red-500"; bgClass = "bg-red-50";
+                        statusLabel = `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse">PENDENTE</span>`;
+                    } else if(statusManutencao === 'EM_ANALISE') {
+                        borderClass = "border-yellow-500"; bgClass = "bg-yellow-50";
+                        statusLabel = `<span class="bg-yellow-500 text-white text-[10px] font-bold px-2 py-1 rounded">EM OFICINA</span>`;
+                    } else if(statusManutencao === 'CONCLUIDO') {
+                        borderClass = "border-blue-500"; bgClass = "bg-blue-50 opacity-75";
+                        statusLabel = `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded">RESOLVIDO</span>`;
+                    }
+                }
+
+                const falhas = !aprovadoNoChecklist ? `
+                    <div class="mt-2 text-xs text-red-600 font-bold border-t border-gray-200 pt-2">
+                        ALERTA DE FALHAS: 
+                        ${i.pneu_ok===false?'PNEU ':''} ${i.luzes_ok===false?'LUZES ':''} ${i.fluidos_ok===false?'FLUÍDOS ':''} 
+                        ${i.lataria_ok===false?'LATARIA ':''} ${i.interior_ok===false?'INTERIOR':''}
+                    </div>` : '';
+
+                const notas = i.notas_manutencao ? `<p class="mt-2 text-xs text-gray-600 italic bg-white p-2 rounded border">🔧 Oficina: "${i.notas_manutencao}"</p>` : '';
 
                 const card = `
-                    <div class="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${cardClass} transition">
-                        <img src="${i.foto_url}" class="w-20 h-20 object-cover rounded bg-gray-100 border cursor-pointer" onclick="window.open('${i.foto_url}')">
+                    <div class="rounded shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${borderClass} ${bgClass} transition">
+                        <img src="${i.foto_url}" class="w-24 h-24 object-cover rounded border cursor-pointer bg-gray-200" onclick="window.open('${i.foto_url}')">
                         <div class="flex-1 text-left">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-lg text-slate-800">${i.placa}</h3>
-                                ${statusBadge}
+                            <div class="flex justify-between">
+                                <h3 class="font-bold text-lg">${i.placa}</h3>
+                                ${statusLabel}
                             </div>
-                            <p class="text-sm text-gray-600 font-bold">${i.motorista}</p>
-                            <p class="text-xs text-gray-400">${new Date(i.created_at).toLocaleString()}</p>
-                            
-                            ${!tudoOk ? `<div class="mt-1 text-xs text-red-600 font-bold">FALHAS: 
-                                ${i.pneu_ok===false?'PNEU ':''} ${i.luzes_ok===false?'LUZES ':''} ${i.fluidos_ok===false?'FLUÍDOS ':''} ${i.lataria_ok===false?'LATARIA ':''} ${i.interior_ok===false?'INTERIOR':''}
-                            </div>` : ''}
+                            <p class="text-sm text-gray-600">${i.motorista} • ${new Date(i.created_at).toLocaleString()}</p>
+                            ${falhas}
+                            ${notas}
                         </div>
-                        <div class="flex gap-2 justify-center items-center">
-                            <button onclick="gerarPDF('${pdfData}')" class="bg-slate-800 text-white px-3 py-2 rounded text-xs hover:bg-slate-700"><i class="fas fa-file-pdf"></i></button>
-                            <a href="https://www.google.com/maps?q=${i.latitude},${i.longitude}" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded text-xs hover:bg-blue-100 border border-blue-100"><i class="fas fa-map-marker-alt"></i></a>
-                            <button onclick="apagarChecklist(${i.id})" class="text-red-400 hover:text-red-600 px-2"><i class="fas fa-trash"></i></button>
+                        <div class="flex flex-col gap-2 justify-center min-w-[120px]">
+                            <!-- BOTÃO DE MANUTENÇÃO (Apenas se tiver falha) -->
+                            ${!aprovadoNoChecklist ? `<button onclick="abrirManutencao(${i.id}, '${i.placa}', '${statusManutencao}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-xs font-bold shadow"><i class="fas fa-tools"></i> GERENCIAR</button>` : ''}
+                            
+                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(i))}')" class="bg-slate-700 text-white px-3 py-2 rounded text-xs hover:bg-slate-600"><i class="fas fa-file-pdf"></i> PDF</button>
+                            <button onclick="apagarChecklist(${i.id})" class="text-red-400 hover:text-red-600 text-xs text-right mt-2">Excluir</button>
                         </div>
                     </div>`;
                 list.innerHTML += card;
             });
         }
 
-        // Filtro local da lista (sem recarregar banco)
-        function filtrarLista() {
-            const termo = document.getElementById('busca').value.toUpperCase();
-            const filtrados = dadosGlobais.filter(d => d.placa.includes(termo));
-            renderizarLista(filtrados);
+        // --- LÓGICA DE MANUTENÇÃO ---
+        function abrirManutencao(id, placa, statusAtual) {
+            document.getElementById('idChecklistAtual').value = id;
+            document.getElementById('modalPlaca').innerText = placa;
+            document.getElementById('novoStatus').value = statusAtual;
+            document.getElementById('notasManutencao').value = ''; // Limpa notas antigas por simplicidade
+            abrir('modalManutencao');
         }
 
-        async function apagarChecklist(id) {
-            if(!confirm("Excluir?")) return;
-            await sb.from('checklists').delete().match({id});
-            carregarDados();
+        async function salvarManutencao() {
+            const id = document.getElementById('idChecklistAtual').value;
+            const status = document.getElementById('novoStatus').value;
+            const notas = document.getElementById('notasManutencao').value;
+
+            const { error } = await sb.from('checklists').update({ 
+                status_manutencao: status,
+                notas_manutencao: notas
+            }).match({ id: id });
+
+            if(error) alert("Erro ao atualizar!");
+            else {
+                alert("Status atualizado!");
+                fechar('modalManutencao');
+                carregarDados();
+            }
         }
 
-        // PDF (Mantido da versão anterior)
+        // Filtro
+        function filtrar() {
+            const t = document.getElementById('busca').value.toUpperCase();
+            renderizar(dadosGlobais.filter(d => d.placa.includes(t)));
+        }
+
+        // PDF (Com status atualizado)
         function gerarPDF(d) {
             const i = JSON.parse(decodeURIComponent(d));
-            const dataF = new Date(i.created_at).toLocaleString('pt-BR');
-            const obs = i.observacao || "Nenhuma.";
-            const check = (val) => (val!==false) ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold;background:#fee2e2;padding:2px">FALHA</span>';
-            const tudoOk = (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
-            const htmlAss = i.assinatura_url ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` : ``;
-
-            const w = window.open('','','width=900,height=1100');
-            w.document.write(`<html><head><title>${i.placa}</title><style>body{font-family:sans-serif;padding:30px;color:#333}.header{display:flex;border-bottom:3px solid #333;padding-bottom:10px;margin-bottom:20px;align-items:center}.logo{height:50px;margin-right:20px}.status{text-align:center;padding:10px;font-weight:bold;border:1px solid #ccc;margin-bottom:20px}.ok{background:#dcfce7;color:#166534}.fail{background:#fee2e2;color:#991b1b}table{width:100%;border-collapse:collapse;margin-bottom:20px}td,th{border:1px solid #eee;padding:8px;text-align:left}th{background:#f1f5f9;font-size:12px}.ass-img{height:60px}.assinatura-box{text-align:center;margin-top:40px}</style></head><body>
-            <div class="header"><img src="${LOGO_URL}" class="logo"><div><h1>RELATÓRIO DE VISTORIA</h1>ID: #${i.id} | ${dataF}</div></div>
-            <div class="status ${tudoOk?'ok':'fail'}">STATUS: ${tudoOk?'APROVADO':'REPROVADO'}</div>
-            <table><tr><th>PLACA</th><td>${i.placa}</td><th>MOTORISTA</th><td>${i.motorista}</td></tr><tr><th>KM</th><td>${i.km}</td><th>TANQUE</th><td>${i.combustivel}</td></tr></table>
-            <h3>ITENS DE INSPEÇÃO</h3>
-            <table><tr><td>Pneus</td><td>${check(i.pneu_ok)}</td></tr><tr><td>Luzes</td><td>${check(i.luzes_ok)}</td></tr><tr><td>Fluídos</td><td>${check(i.fluidos_ok)}</td></tr><tr><td>Lataria</td><td>${check(i.lataria_ok)}</td></tr><tr><td>Interior</td><td>${check(i.interior_ok)}</td></tr></table>
-            ${i.observacao ? `<div style="background:#fff7ed;padding:10px;border:1px solid orange;margin-bottom:20px">OBS: ${obs}</div>` : ''}
-            <div style="text-align:center"><img src="${i.foto_url}" style="max-height:350px;max-width:100%"></div>
-            ${htmlAss}
-            <script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
+            const check = (v) => (v!==false) ? '<b style="color:green">OK</b>' : '<b style="color:red">FALHA</b>';
+            const w = window.open('','','width=800,height=1100');
+            w.document.write(`<html><body style="font-family:sans-serif;padding:40px">
+                <div style="border-bottom:2px solid #333;margin-bottom:20px"><h1>RELATÓRIO #${i.id}</h1></div>
+                <p><b>VEÍCULO:</b> ${i.placa} | <b>CONDUTOR:</b> ${i.motorista}</p>
+                <p><b>DATA:</b> ${new Date(i.created_at).toLocaleString()}</p>
+                <hr>
+                <h3>INSPEÇÃO</h3>
+                <p>Pneus: ${check(i.pneu_ok)} | Luzes: ${check(i.luzes_ok)}</p>
+                <p>Fluídos: ${check(i.fluidos_ok)} | Lataria: ${check(i.lataria_ok)}</p>
+                <p>Interior: ${check(i.interior_ok)}</p>
+                <hr>
+                <p><b>OBSERVAÇÕES DO MOTORISTA:</b> ${i.observacao || '-'}</p>
+                <p><b>STATUS DA OFICINA:</b> ${i.status_manutencao || 'PENDENTE'}</p>
+                <p><b>NOTAS DA OFICINA:</b> ${i.notas_manutencao || '-'}</p>
+                <br><img src="${i.foto_url}" style="max-width:100%;max-height:300px">
+                <script>setTimeout(()=>window.print(),1000)<\/script>
+            </body></html>`);
         }
 
-        // Modais (Mesmos de sempre)
+        // Modais (Padrão)
         function abrir(id, cb) { document.getElementById(id).classList.remove('hidden'); if(cb) cb(); }
         function fechar(id) { document.getElementById(id).classList.add('hidden'); }
-        async function loadFrota() { const l=document.getElementById('lFrota'); l.innerHTML=''; const {data}=await sb.from('frota').select('*').order('placa'); data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`); }
-        async function addFrota() { const p=document.getElementById('nPlaca').value.toUpperCase(); if(p){await sb.from('frota').insert({placa:p}); loadFrota(); document.getElementById('nPlaca').value='';} }
-        async function loadEquipe() { const l=document.getElementById('lEquipe'); l.innerHTML=''; const {data}=await sb.from('funcionarios').select('*').order('nome'); data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`); }
-        async function addEquipe() { const n=document.getElementById('nNome').value.toUpperCase(); const p=document.getElementById('nPin').value; if(n&&p){await sb.from('funcionarios').insert({nome:n, pin:p}); loadEquipe(); document.getElementById('nNome').value='';} }
-        async function del(t, id, cb) { if(confirm("Apagar?")) { await sb.from(t).delete().match({id}); cb(); } }
+        async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`)}
+        async function addFrota(){const p=document.getElementById('nPlaca').value.toUpperCase();if(p){await sb.from('frota').insert({placa:p});loadFrota();document.getElementById('nPlaca').value=''}}
+        async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`)}
+        async function addEquipe(){const n=document.getElementById('nNome').value.toUpperCase();const p=document.getElementById('nPin').value;if(n&&p){await sb.from('funcionarios').insert({nome:n,pin:p});loadEquipe();document.getElementById('nNome').value=''}}
+        async function del(t,id,cb){if(confirm("Apagar?")){await sb.from(t).delete().match({id});cb()}}
+        async function apagarChecklist(id){if(confirm("Excluir?")){await sb.from('checklists').delete().match({id});carregarDados()}}
     </script>
 </body>
 </html>
