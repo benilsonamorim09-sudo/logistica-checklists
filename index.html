@@ -3,186 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Logístico</title>
-    <!-- Tailwind CSS -->
+    <title>App Logística</title>
+    
+    <!-- Configuração para parecer App (PWA) -->
+    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Estilos e Bibliotecas -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Ícones -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Chart.js (Para os Gráficos) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-gray-100 p-4 min-h-screen flex items-center justify-center">
 
-    <!-- Barra Superior -->
-    <nav class="bg-blue-900 p-4 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-lg"><i class="fas fa-chart-pie mr-2"></i>Gestão Logística</h1>
-            <div class="space-x-2">
-                <button onclick="baixarExcel()" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-sm">
-                    <i class="fas fa-file-excel"></i> Excel
-                </button>
-                <button onclick="carregarDados()" class="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded text-sm">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Área de Conteúdo -->
-    <div class="max-w-5xl mx-auto p-4 space-y-6">
-        
-        <!-- KPIs (Indicadores) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Card Total -->
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-                <p class="text-gray-500 text-xs font-bold uppercase">Total Vistorias</p>
-                <p id="kpi-total" class="text-3xl font-bold text-slate-800">0</p>
-            </div>
-            <!-- Card Aprovados -->
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-                <p class="text-gray-500 text-xs font-bold uppercase">Aprovados</p>
-                <p id="kpi-aprovados" class="text-3xl font-bold text-green-600">0</p>
-            </div>
-            <!-- Card Reprovados -->
-            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-                <p class="text-gray-500 text-xs font-bold uppercase">Com Falha</p>
-                <p id="kpi-reprovados" class="text-3xl font-bold text-red-600">0</p>
-            </div>
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Cabeçalho -->
+        <div class="bg-blue-800 p-6 text-center">
+            <h1 class="text-white text-2xl font-bold uppercase tracking-wide">🚛 Vistoria de Saída</h1>
+            <p class="text-blue-200 text-xs mt-1">Sistema Integrado Logístico</p>
         </div>
 
-        <!-- Área do Gráfico -->
-        <div class="bg-white p-4 rounded-lg shadow">
-            <h3 class="text-slate-600 font-bold mb-4 border-b pb-2">Status da Frota</h3>
-            <div class="h-64 flex justify-center">
-                <canvas id="graficoPneus"></canvas>
+        <div class="p-6 space-y-6">
+            
+            <!-- Campo Placa -->
+            <div>
+                <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Placa do Veículo</label>
+                <input type="text" id="placa" class="w-full p-4 border-2 border-gray-200 rounded-xl text-xl font-bold text-center uppercase tracking-widest focus:border-blue-500 outline-none transition" placeholder="ABC-1234">
             </div>
-        </div>
 
-        <!-- Lista Detalhada -->
-        <div>
-            <h3 class="text-slate-600 font-bold mb-4 uppercase text-sm tracking-wide">Histórico Recente</h3>
-            <div id="lista-checklists" class="space-y-4">
-                <p class="text-center text-gray-500 mt-10">Carregando dados...</p>
+            <!-- Campo Motorista -->
+            <div>
+                <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Nome do Motorista</label>
+                <input type="text" id="motorista" class="w-full p-4 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 outline-none transition" placeholder="Nome Completo">
             </div>
+
+            <!-- Campo Pneus -->
+            <div>
+                <label class="block text-gray-700 font-bold mb-2 text-sm uppercase">Situação dos Pneus</label>
+                <div class="relative">
+                    <select id="pneu_ok" class="w-full p-4 border-2 border-gray-200 rounded-xl text-lg bg-white appearance-none focus:border-blue-500 outline-none transition">
+                        <option value="true">✅ APROVADO - Em bom estado</option>
+                        <option value="false">❌ REPROVADO - Pneu careca/furo</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
+                </div>
+            </div>
+
+            <!-- Campo Foto (Câmera) -->
+            <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-100 border-dashed">
+                <label class="block text-blue-800 font-bold mb-2 text-sm uppercase text-center">📸 Evidência Obrigatória</label>
+                <input type="file" id="foto" accept="image/*" capture="environment" class="w-full text-sm text-slate-500
+                  file:mr-4 file:py-3 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-bold
+                  file:bg-blue-600 file:text-white
+                  file:cursor-pointer hover:file:bg-blue-700
+                ">
+                <p class="text-xs text-center text-blue-400 mt-2">Tire uma foto clara da carga ou veículo</p>
+            </div>
+
+            <!-- Botão de Ação -->
+            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 rounded-xl text-lg shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
+                <span>📍 ENVIAR REGISTRO</span>
+            </button>
+            
+            <!-- Status -->
+            <p id="status" class="text-center text-xs font-bold text-gray-400 mt-2">Sistema Online • Pronto para envio</p>
         </div>
     </div>
 
     <script>
+        // --- CONFIGURAÇÃO SUPABASE ---
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
 
+        // Cria conexão usando nome único para evitar erros
         const meuSupabase = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
-        let dadosGlobais = []; // Guarda os dados para usar no Excel e Gráfico
 
-        window.onload = function() {
-            let senha = prompt("Senha de Gerente:");
-            if(senha !== "1234") {
-                document.body.innerHTML = "<h1 class='text-center mt-10 text-red-600 font-bold'>Acesso Negado</h1>";
-                return;
-            }
-            carregarDados();
-        }
-
-        async function carregarDados() {
-            const container = document.getElementById('lista-checklists');
+        async function enviarDados() {
+            const btn = document.getElementById('btnEnviar');
+            const status = document.getElementById('status');
             
-            // Busca TUDO (limite 100 para o gráfico ficar bonito)
-            const { data, error } = await meuSupabase
-                .from('checklists')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(100);
+            // 1. Bloqueia botão
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.innerHTML = '<span>⏳ PROCESSANDO...</span>';
+            status.innerText = "🔄 Iniciando GPS de alta precisão...";
 
-            if (error) { alert("Erro: " + error.message); return; }
-            dadosGlobais = data; // Salva na memória
+            // 2. Configuração GPS
+            const opcoesGPS = { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 };
 
-            // Atualiza KPIs
-            atualizarDashboard(data);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    status.innerText = "📍 Localização obtida! Enviando imagem...";
+                    
+                    // 3. Validação dos Campos
+                    const placa = document.getElementById('placa').value.toUpperCase();
+                    const motorista = document.getElementById('motorista').value;
+                    const pneuOk = document.getElementById('pneu_ok').value === 'true';
+                    const arquivoFoto = document.getElementById('foto').files[0];
 
-            // Renderiza Lista
-            container.innerHTML = '';
-            data.forEach(item => {
-                const dataFormatada = new Date(item.created_at).toLocaleString('pt-BR');
-                const statusHtml = item.pneu_ok 
-                    ? '<span class="text-green-600 font-bold"><i class="fas fa-check-circle"></i> OK</span>' 
-                    : '<span class="text-red-600 font-bold"><i class="fas fa-times-circle"></i> FALHA</span>';
-                
-                const linkMapa = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
+                    if (!placa || !motorista) throw new Error("Preencha Placa e Motorista!");
+                    if (!arquivoFoto) throw new Error("A foto é obrigatória para auditoria!");
 
-                const card = `
-                    <div class="bg-white rounded border-l-4 ${item.pneu_ok ? 'border-green-500' : 'border-red-500'} p-4 shadow flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="flex-1">
-                            <h4 class="font-bold text-lg">${item.placa}</h4>
-                            <p class="text-sm text-gray-500">${item.motorista} • ${dataFormatada}</p>
-                        </div>
-                        <div class="text-center">${statusHtml}</div>
-                        <div class="flex gap-2">
-                            <a href="${item.foto_url}" target="_blank" class="text-blue-600 border border-blue-600 px-3 py-1 rounded text-sm hover:bg-blue-50">Foto</a>
-                            <a href="${linkMapa}" target="_blank" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Mapa</a>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += card;
-            });
-        }
+                    // 4. Upload da Foto
+                    const nomeArquivo = Date.now() + '_' + Math.random().toString(36).substring(7) + '.jpg';
+                    const { error: erroUpload } = await meuSupabase.storage
+                        .from('evidencias')
+                        .upload(nomeArquivo, arquivoFoto);
 
-        function atualizarDashboard(dados) {
-            // 1. Cálculos
-            const total = dados.length;
-            const aprovados = dados.filter(d => d.pneu_ok).length;
-            const reprovados = total - aprovados;
+                    if (erroUpload) throw erroUpload;
 
-            // 2. Atualiza Números na Tela
-            document.getElementById('kpi-total').innerText = total;
-            document.getElementById('kpi-aprovados').innerText = aprovados;
-            document.getElementById('kpi-reprovados').innerText = reprovados;
+                    // URL Pública da Foto
+                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeArquivo}`;
+                    
+                    status.innerText = "💾 Salvando registro no banco...";
 
-            // 3. Desenha o Gráfico (Chart.js)
-            const ctx = document.getElementById('graficoPneus').getContext('2d');
-            
-            // Se já existir gráfico, destroi para criar outro (evita bugs)
-            if(window.meuGrafico) window.meuGrafico.destroy();
+                    // 5. Salvar Dados no Banco
+                    const { error: erroBanco } = await meuSupabase.from('checklists').insert({
+                        placa: placa,
+                        motorista: motorista,
+                        pneu_ok: pneuOk,
+                        foto_url: fotoUrl,
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    });
 
-            window.meuGrafico = new Chart(ctx, {
-                type: 'doughnut', // Tipo Rosca
-                data: {
-                    labels: ['Aprovados', 'Com Falha'],
-                    datasets: [{
-                        data: [aprovados, reprovados],
-                        backgroundColor: ['#22c55e', '#ef4444'], // Verde e Vermelho
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
+                    if (erroBanco) throw erroBanco;
+
+                    // 6. Sucesso
+                    alert("✅ SUCESSO! \nRegistro enviado e salvo na nuvem.");
+                    window.location.reload();
+
+                } catch (erro) {
+                    alert("❌ ERRO: " + erro.message);
+                    status.innerText = "Falha no envio. Tente novamente.";
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.innerHTML = '<span>📍 ENVIAR REGISTRO</span>';
                 }
-            });
-        }
-
-        function baixarExcel() {
-            // Gambiarra inteligente para criar CSV sem biblioteca pesada
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Data,Placa,Motorista,Pneu OK?,Latitude,Longitude,Link Foto\n"; // Cabeçalho
-
-            dadosGlobais.forEach(row => {
-                const dataStr = new Date(row.created_at).toLocaleDateString();
-                const linha = `${dataStr},${row.placa},${row.motorista},${row.pneu_ok ? 'SIM' : 'NAO'},${row.latitude},${row.longitude},${row.foto_url}`;
-                csvContent += linha + "\n";
-            });
-
-            // Cria um link invisível e clica nele para baixar
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "relatorio_logistica.csv");
-            document.body.appendChild(link);
-            link.click();
+            }, (erroGPS) => {
+                let msg = "Erro desconhecido no GPS.";
+                if (erroGPS.code === 1) msg = "Permissão de GPS negada. Ative nas configurações do site.";
+                if (erroGPS.code === 2) msg = "Sinal GPS indisponível. Vá para local aberto.";
+                if (erroGPS.code === 3) msg = "GPS demorou muito para responder.";
+                
+                alert("⚠️ " + msg);
+                status.innerText = "Erro: Sem localização";
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.innerHTML = '<span>📍 ENVIAR REGISTRO</span>';
+            }, opcoesGPS);
         }
     </script>
 </body>
