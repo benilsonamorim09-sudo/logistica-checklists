@@ -4,38 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.G.L - Gestão e Relatórios</title>
+    <title>S.G.L - Painel Gestor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 min-h-screen text-slate-800 font-sans">
+<body class="bg-gray-50 min-h-screen text-slate-800">
 
-    <!-- MENU -->
+    <!-- MENU SUPERIOR -->
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-lg">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
+                <img src="https://cdn-icons-png.flaticon.com/512/2203/2203124.png" class="w-10 h-10 bg-white rounded p-1 object-contain">
                 <div>
                     <h1 class="font-bold text-lg tracking-wide">LOGÍSTICA <span class="text-blue-400">CORP</span></h1>
-                    <p class="text-[10px] text-gray-400">Painel de Controle</p>
+                    <p class="text-[10px] text-gray-400">Sistema Integrado</p>
                 </div>
             </div>
             
             <div class="flex gap-2 text-sm w-full md:w-auto justify-center items-center bg-slate-800 p-1 rounded-lg">
-                <input type="date" id="filtroData" onchange="carregarDados()" class="text-slate-800 rounded px-2 py-1 text-sm border-none outline-none font-bold" title="Filtrar Data">
-                
-                <button onclick="alternarVisao('dashboard')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Dashboard"><i class="fas fa-chart-pie"></i></button>
+                <input type="date" id="filtroData" onchange="carregarDados()" class="text-slate-800 rounded px-2 py-1 text-sm border-none outline-none font-bold">
+                <button onclick="alternarVisao('dashboard')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Dashboard BI"><i class="fas fa-chart-pie"></i></button>
                 <button onclick="alternarVisao('lista')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Lista"><i class="fas fa-list"></i></button>
-                
-                <!-- NOVOS BOTÕES DE EXPORTAÇÃO -->
-                <button onclick="imprimirRelatorioGeral()" class="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition shadow" title="Imprimir Relatório de Fechamento"><i class="fas fa-print"></i> Relatório</button>
-                <button onclick="exportarCSV()" class="px-3 py-1 rounded hover:bg-green-600 text-green-400 hover:text-white transition" title="Excel"><i class="fas fa-file-excel"></i></button>
-                
+                <button onclick="alternarVisao('timeline')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Timeline"><i class="fas fa-stream"></i></button>
+                <button onclick="exportarCSV()" class="px-3 py-1 rounded hover:bg-green-600 text-green-400 hover:text-white transition" title="Baixar Excel"><i class="fas fa-file-excel"></i></button>
                 <button onclick="carregarDados()" class="px-3 py-1 rounded hover:bg-blue-600 text-blue-400 hover:text-white transition" title="Atualizar"><i class="fas fa-sync"></i></button>
             </div>
         </div>
+        
         <div class="max-w-7xl mx-auto mt-2 flex justify-end gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-500">
             <button onclick="abrir('modalFrota', loadFrota)" class="hover:text-white transition"><i class="fas fa-truck"></i> Frota</button>
             <button onclick="abrir('modalEquipe', loadEquipe)" class="hover:text-white transition"><i class="fas fa-users"></i> Equipe</button>
@@ -45,7 +42,7 @@
 
     <div class="max-w-7xl mx-auto p-4 space-y-6">
         
-        <!-- DASHBOARD -->
+        <!-- DASHBOARD BI -->
         <div id="viewDashboard" class="space-y-6 animate-fade-in">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Alertas</span><p id="kpiPendente" class="text-3xl font-black text-red-600">0</p></div>
@@ -53,24 +50,32 @@
                 <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Liberados</span><p id="kpiAprovados" class="text-3xl font-black text-green-600">0</p></div>
                 <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Total</span><p id="kpiTotal" class="text-3xl font-black text-slate-700">0</p></div>
             </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold text-slate-700 mb-4 border-b pb-2">Ocorrências por Tipo</h3><div class="h-64"><canvas id="chartFalhas"></canvas></div></div>
                 <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold text-slate-700 mb-4 border-b pb-2">Status da Operação</h3><div class="h-64"><canvas id="chartStatus"></canvas></div></div>
             </div>
         </div>
 
-        <!-- LISTA -->
+        <!-- MODO LISTA -->
         <div id="viewLista" class="hidden animate-fade-in">
             <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl text-slate-700">Registros</h3><input id="busca" onkeyup="filtrar()" placeholder="Buscar placa..." class="border p-2 rounded text-sm uppercase w-48 shadow-sm"></div>
             <div id="lista" class="space-y-4 text-center text-gray-400">Carregando...</div>
         </div>
+
+        <!-- MODO TIMELINE -->
+        <div id="viewTimeline" class="hidden animate-fade-in">
+            <h3 class="font-bold text-xl text-slate-700 mb-6">Linha do Tempo Operacional</h3>
+            <div id="timelineContainer" class="border-l-4 border-slate-300 ml-4 space-y-0 pl-8 relative"></div>
+        </div>
     </div>
 
-    <!-- MODAIS (Gerenciamento) -->
+    <!-- MODAIS -->
     <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl"><h2 class="font-bold mb-4 border-b pb-2">🚛 Frota</h2><div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase rounded" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700">+</button></div><ul id="lFrota" class="h-60 overflow-y-auto text-sm space-y-2"></ul><button onclick="fechar('modalFrota')" class="w-full mt-4 bg-gray-200 py-2 rounded font-bold text-sm">Fechar</button></div></div>
     <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl"><h2 class="font-bold mb-4 border-b pb-2">👥 Equipe</h2><div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase rounded" placeholder="Nome"><input id="nPin" class="border p-2 w-20 text-center rounded" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700">+</button></div><ul id="lEquipe" class="h-60 overflow-y-auto text-sm space-y-2"></ul><button onclick="fechar('modalEquipe')" class="w-full mt-4 bg-gray-200 py-2 rounded font-bold text-sm">Fechar</button></div></div>
-    <div id="modalManutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl border-t-4 border-yellow-500"><h2 class="font-bold mb-4">Gestão de Ocorrência</h2><p id="modalPlaca" class="text-2xl font-black mb-4 text-center text-slate-800 tracking-wider">ABC-1234</p><label class="text-xs font-bold text-gray-500">STATUS</label><select id="novoStatus" class="w-full border p-2 rounded mb-4 font-bold"><option value="PENDENTE">🔴 PENDENTE</option><option value="EM_ANALISE">🟡 EM MANUTENÇÃO</option><option value="CONCLUIDO">🟢 CONCLUÍDO</option></select><label class="text-xs font-bold text-gray-500">NOTAS DA OFICINA</label><textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm"></textarea><input type="hidden" id="idChecklistAtual"><button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold hover:bg-blue-900 shadow">SALVAR ALTERAÇÕES</button><button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-400 text-xs hover:text-gray-600">Cancelar</button></div></div>
     <div id="modalAuditoria" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-2xl"><h2 class="font-bold mb-4 text-purple-900 text-lg">Logs de Auditoria</h2><div class="flex-1 overflow-y-auto border rounded bg-gray-50 p-2"><table class="w-full text-xs text-left"><tbody id="tabelaLogs"></tbody></table></div><button onclick="fechar('modalAuditoria')" class="mt-4 bg-gray-200 px-4 py-2 rounded text-sm font-bold">Fechar</button></div></div>
+    
+    <div id="modalManutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl border-t-4 border-yellow-500"><h2 class="font-bold mb-4">Gestão de Ocorrência</h2><p id="modalPlaca" class="text-2xl font-black mb-4 text-center text-slate-800 tracking-wider">ABC-1234</p><label class="text-xs font-bold text-gray-500">STATUS</label><select id="novoStatus" class="w-full border p-2 rounded mb-4 font-bold"><option value="PENDENTE">🔴 PENDENTE</option><option value="EM_ANALISE">🟡 EM MANUTENÇÃO</option><option value="CONCLUIDO">🟢 CONCLUÍDO</option></select><label class="text-xs font-bold text-gray-500">NOTAS DA OFICINA</label><textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm"></textarea><input type="hidden" id="idChecklistAtual"><button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold hover:bg-blue-900 shadow">SALVAR ALTERAÇÕES</button><button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-400 text-xs hover:text-gray-600">Cancelar</button></div></div>
 
     <script>
         const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2203/2203124.png";
@@ -80,7 +85,6 @@
         let dadosGlobais = [], chart1 = null, chart2 = null;
 
         window.onload = function() {
-            document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
             document.getElementById('filtroData').valueAsDate = new Date();
             if(prompt("Senha Admin:") !== "1234") return;
             carregarDados();
@@ -90,16 +94,20 @@
             const dataFiltro = document.getElementById('filtroData').value;
             let query = sb.from('checklists').select('*').order('created_at', {ascending:false});
             if(dataFiltro) query = query.gte('created_at', `${dataFiltro}T00:00:00`).lte('created_at', `${dataFiltro}T23:59:59`); else query = query.limit(100);
+            
             const { data, error } = await query;
             if(error) return alert("Erro de conexão.");
+            
             dadosGlobais = data;
-            renderizarLista(data); atualizarKPIs(data);
+            renderizarLista(data); renderizarTimeline(data); atualizarKPIs(data);
         }
 
+        // --- DASHBOARD ---
         function atualizarKPIs(data) {
             const pendentes = data.filter(i => !isAprovado(i) && (i.status_manutencao === 'PENDENTE' || !i.status_manutencao)).length;
             const oficina = data.filter(i => i.status_manutencao === 'EM_ANALISE').length;
             const liberados = data.filter(i => isAprovado(i) || i.status_manutencao === 'CONCLUIDO').length;
+            
             document.getElementById('kpiPendente').innerText = pendentes;
             document.getElementById('kpiAndamento').innerText = oficina;
             document.getElementById('kpiAprovados').innerText = liberados;
@@ -107,8 +115,11 @@
 
             let falhas = {'Pneu':0, 'Luz':0, 'Fluído':0, 'Lataria':0, 'Interior':0};
             data.forEach(i => {
-                if(i.pneu_ok===false) falhas['Pneu']++; if(i.luzes_ok===false) falhas['Luz']++;
-                if(i.fluidos_ok===false) falhas['Fluído']++; if(i.lataria_ok===false) falhas['Lataria']++; if(i.interior_ok===false) falhas['Interior']++;
+                if(i.pneu_ok===false) falhas['Pneu']++;
+                if(i.luzes_ok===false) falhas['Luz']++;
+                if(i.fluidos_ok===false) falhas['Fluído']++;
+                if(i.lataria_ok===false) falhas['Lataria']++;
+                if(i.interior_ok===false) falhas['Interior']++;
             });
 
             const ctx1 = document.getElementById('chartFalhas').getContext('2d');
@@ -120,6 +131,7 @@
             chart2 = new Chart(ctx2, { type: 'doughnut', data: { labels: ['Aprovado', 'Pendente', 'Oficina'], datasets: [{ data: [liberados, pendentes, oficina], backgroundColor: ['#22c55e', '#ef4444', '#eab308'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
+        // --- RENDERIZADORES ---
         function renderizarLista(data) {
             const list = document.getElementById('lista'); list.innerHTML = '';
             if(data.length === 0) { list.innerHTML = '<p class="text-gray-400 mt-10">Vazio.</p>'; return; }
@@ -137,71 +149,48 @@
             });
         }
 
-        // --- RELATÓRIO GERAL (CONSOLIDADO) ---
-        function imprimirRelatorioGeral() {
-            const d = dadosGlobais;
-            const dataFiltro = document.getElementById('filtroData').value || "GERAL";
-            let htmlLinhas = "";
-            let aprovados = 0;
-            
-            d.forEach(i => {
+        function renderizarTimeline(data) {
+            const tl = document.getElementById('timelineContainer'); tl.innerHTML = '';
+            data.forEach(i => {
                 const ok = isAprovado(i);
-                if(ok) aprovados++;
-                const status = ok ? '<b style="color:green">APROVADO</b>' : '<b style="color:red">FALHA</b>';
-                htmlLinhas += `
-                    <tr>
-                        <td style="padding:5px;border:1px solid #ccc">${new Date(i.created_at).toLocaleDateString()}</td>
-                        <td style="padding:5px;border:1px solid #ccc">${i.tipo_operacao}</td>
-                        <td style="padding:5px;border:1px solid #ccc">${i.placa}</td>
-                        <td style="padding:5px;border:1px solid #ccc">${i.motorista}</td>
-                        <td style="padding:5px;border:1px solid #ccc">${status}</td>
-                    </tr>`;
+                const status = i.status_manutencao || 'PENDENTE';
+                let color = "bg-green-500";
+                if(!ok) {
+                    if(status === 'PENDENTE') color = "bg-red-600";
+                    else if(status === 'EM_ANALISE') color = "bg-yellow-500";
+                    else color = "bg-blue-500";
+                }
+                const icon = i.tipo_operacao==='SAIDA'?'fa-arrow-right':'fa-arrow-left';
+                tl.innerHTML += `<div class="relative pl-8 pb-8 border-l-2 border-slate-200 last:border-0"><div class="absolute -left-[9px] top-0 w-5 h-5 rounded-full border-4 border-white ${color} shadow-sm"></div><div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition"><span class="text-xs font-bold text-gray-400 block mb-1">${new Date(i.created_at).toLocaleTimeString().slice(0,5)}</span><h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fas ${icon} text-xs mr-2"></i> ${i.tipo_operacao} <span class="text-sm font-normal text-gray-500">| ${i.placa}</span></h4><p class="text-sm text-gray-600">${i.motorista}</p>${!ok?'<p class="text-xs text-red-500 font-bold mt-1">⚠️ OCORRÊNCIA</p>':''}</div></div>`;
             });
-
-            const w = window.open('','','width=1100,height=900');
-            w.document.write(`
-                <html><head><title>Relatório de Fechamento</title><style>body{font-family:sans-serif;padding:30px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#eee;text-align:left;padding:5px;border:1px solid #ccc}.header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #333;margin-bottom:20px;padding-bottom:10px}</style></head>
-                <body>
-                    <div class="header">
-                        <div>
-                            <img src="${LOGO_URL}" style="height:50px">
-                            <h2>RELATÓRIO DE FECHAMENTO</h2>
-                        </div>
-                        <div style="text-align:right">
-                            <p>Data: ${dataFiltro}</p>
-                            <p>Total: ${d.length} | Aprovados: ${aprovados} | Reprovados: ${d.length - aprovados}</p>
-                        </div>
-                    </div>
-                    <table>
-                        <thead><tr><th>DATA</th><th>OPERAÇÃO</th><th>VEÍCULO</th><th>CONDUTOR</th><th>RESULTADO</th></tr></thead>
-                        <tbody>${htmlLinhas}</tbody>
-                    </table>
-                    <div style="margin-top:60px;display:flex;justify-content:space-between">
-                        <div style="text-align:center"><hr style="width:200px"><p>Gestor Operacional</p></div>
-                        <div style="text-align:center"><hr style="width:200px"><p>Diretoria Logística</p></div>
-                    </div>
-                    <script>setTimeout(()=>window.print(),1000)<\/script>
-                </body></html>
-            `);
         }
 
-        // Utils
-        function alternarVisao(v){['viewDashboard','viewLista'].forEach(id=>document.getElementById(id).classList.add('hidden')); if(v==='dashboard')document.getElementById('viewDashboard').classList.remove('hidden');else document.getElementById('viewLista').classList.remove('hidden')}
+        // --- PDF ---
+        function gerarPDF(d){
+            const i=JSON.parse(decodeURIComponent(d));
+            const check=(v)=>(v!==false)?'<span style="color:green">OK</span>':'<span style="color:red">FALHA</span>';
+            const ass=i.assinatura_url?`<img src="${i.assinatura_url}" style="height:50px"><hr style="width:200px;margin:0"><p>Assinado</p>`:`<p style="color:red">Sem Assinatura</p>`;
+            const w=window.open('','','width=900,height=1100');
+            w.document.write(`<html><body style="font-family:sans-serif;padding:40px"><div style="text-align:center;border-bottom:2px solid #333;margin-bottom:20px"><h1>RELATÓRIO DE VISTORIA #${i.id}</h1><p>${i.tipo_operacao} | ${new Date(i.created_at).toLocaleString()}</p></div><p><b>VEÍCULO:</b> ${i.placa}</p><p><b>MOTORISTA:</b> ${i.motorista}</p><p><b>STATUS:</b> ${isAprovado(i)?'APROVADO':'REPROVADO'}</p><table style="width:100%;border-collapse:collapse;margin:20px 0"><tr><td style="border:1px solid #ccc;padding:5px">Pneus</td><td style="border:1px solid #ccc;padding:5px">${check(i.pneu_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Luzes</td><td style="border:1px solid #ccc;padding:5px">${check(i.luzes_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Fluídos</td><td style="border:1px solid #ccc;padding:5px">${check(i.fluidos_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Lataria</td><td style="border:1px solid #ccc;padding:5px">${check(i.lataria_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Interior</td><td style="border:1px solid #ccc;padding:5px">${check(i.interior_ok)}</td></tr></table><p><b>OBS:</b> ${i.observacao||'-'}</p><div style="text-align:center"><img src="${i.foto_url}" style="max-height:300px;margin:20px"></div><div style="text-align:center;margin-top:40px">${ass}</div><script>setTimeout(()=>window.print(),2000)<\/script></body></html>`);
+        }
+
+        // --- UTILS ---
+        function alternarVisao(v){['viewDashboard','viewLista','viewTimeline'].forEach(id=>document.getElementById(id).classList.add('hidden')); if(v==='dashboard')document.getElementById('viewDashboard').classList.remove('hidden');else if(v==='lista')document.getElementById('viewLista').classList.remove('hidden');else document.getElementById('viewTimeline').classList.remove('hidden')}
         function isAprovado(i){return(i.pneu_ok!==false&&i.luzes_ok!==false&&i.fluidos_ok!==false&&i.lataria_ok!==false&&i.interior_ok!==false)}
         async function registrarLog(a,d){await sb.from('auditoria').insert({usuario:'ADMIN',acao:a,detalhes:d})}
-        async function abrirAuditoria(){document.getElementById('modalAuditoria').classList.remove('hidden');const t=document.getElementById('tabelaLogs');t.innerHTML='Carregando...';const{data}=await sb.from('auditoria').select('*').order('data_hora',{ascending:false}).limit(50);t.innerHTML='';data.forEach(l=>{t.innerHTML+=`<tr class="border-b"><td class="p-1">${new Date(l.data_hora).toLocaleString()}</td><td class="p-1">${l.usuario}</td><td class="p-1 font-bold">${l.acao}</td></tr>`})}
-        function abrirManutencao(id,p,s){document.getElementById('idChecklistAtual').value=id;document.getElementById('modalPlaca').innerText=p;document.getElementById('novoStatus').value=s;document.getElementById('notasManutencao').value='';document.getElementById('modalManutencao').classList.remove('hidden')}
-        async function salvarManutencao(){const id=document.getElementById('idChecklistAtual').value;await sb.from('checklists').update({status_manutencao:document.getElementById('novoStatus').value,notas_manutencao:document.getElementById('notasManutencao').value}).match({id});await registrarLog('MANUTENÇÃO',id);fechar('modalManutencao');carregarDados()}
-        async function apagarChecklist(id,p){if(confirm("Excluir?")){await sb.from('checklists').delete().match({id});await registrarLog('EXCLUIU',p);carregarDados()}}
         function abrir(id,cb){document.getElementById(id).classList.remove('hidden');if(cb)cb()} function fechar(id){document.getElementById(id).classList.add('hidden')}
         async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500 font-bold">X</button></li>`)}
         async function addFrota(){const p=document.getElementById('nPlaca').value.toUpperCase();if(p){await sb.from('frota').insert({placa:p});await registrarLog('ADD VEICULO',p);loadFrota();document.getElementById('nPlaca').value=''}}
         async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500 font-bold">X</button></li>`)}
         async function addEquipe(){const n=document.getElementById('nNome').value.toUpperCase();const p=document.getElementById('nPin').value;if(n){await sb.from('funcionarios').insert({nome:n,pin:p});await registrarLog('ADD STAFF',n);loadEquipe();document.getElementById('nNome').value=''}}
         async function del(t,id,cb){if(confirm("Apagar?")){await sb.from(t).delete().match({id});await registrarLog('APAGOU',t);cb()}}
+        
+        async function abrirAuditoria(){document.getElementById('modalAuditoria').classList.remove('hidden');const t=document.getElementById('tabelaLogs');t.innerHTML='Carregando...';const{data}=await sb.from('auditoria').select('*').order('data_hora',{ascending:false}).limit(50);t.innerHTML='';data.forEach(l=>{t.innerHTML+=`<tr class="border-b"><td class="p-1">${new Date(l.data_hora).toLocaleString()}</td><td class="p-1">${l.usuario}</td><td class="p-1 font-bold">${l.acao}</td></tr>`})}
+        function abrirManutencao(id,p,s){document.getElementById('idChecklistAtual').value=id;document.getElementById('modalPlaca').innerText=p;document.getElementById('novoStatus').value=s;document.getElementById('notasManutencao').value='';document.getElementById('modalManutencao').classList.remove('hidden')}
+        async function salvarManutencao(){const id=document.getElementById('idChecklistAtual').value;await sb.from('checklists').update({status_manutencao:document.getElementById('novoStatus').value,notas_manutencao:document.getElementById('notasManutencao').value}).match({id});await registrarLog('MANUTENÇÃO',id);fechar('modalManutencao');carregarDados()}
+        async function apagarChecklist(id,p){if(confirm("Excluir?")){await sb.from('checklists').delete().match({id});await registrarLog('EXCLUIU',p);carregarDados()}}
         function filtrar(){renderizarLista(dadosGlobais.filter(d=>d.placa.includes(document.getElementById('busca').value.toUpperCase())))}
         function exportarCSV(){let c="ID,DATA,OPERACAO,PLACA,MOTORISTA,STATUS\n";dadosGlobais.forEach(r=>{c+=`${r.id},${r.created_at},${r.tipo_operacao},${r.placa},${r.motorista},${isAprovado(r)?'OK':'FALHA'}\n`});const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dados.csv';a.click()}
-        function gerarPDF(d){const i=JSON.parse(decodeURIComponent(d));const check=(v)=>(v!==false)?'<span style="color:green">OK</span>':'<span style="color:red">FALHA</span>';const ass=i.assinatura_url?`<img src="${i.assinatura_url}" style="height:50px"><hr style="width:200px;margin:0"><p>Assinado</p>`:`<p style="color:red">Sem Assinatura</p>`;const w=window.open('','','width=900,height=1100');w.document.write(`<html><body style="font-family:sans-serif;padding:40px"><div style="text-align:center;border-bottom:2px solid #333;margin-bottom:20px"><h1>RELATÓRIO #${i.id}</h1><p>${i.tipo_operacao} | ${new Date(i.created_at).toLocaleString()}</p></div><p><b>VEÍCULO:</b> ${i.placa}</p><p><b>MOTORISTA:</b> ${i.motorista}</p><p><b>STATUS:</b> ${isAprovado(i)?'APROVADO':'REPROVADO'}</p><table style="width:100%;border-collapse:collapse;margin:20px 0"><tr><td style="border:1px solid #ccc;padding:5px">Pneus</td><td style="border:1px solid #ccc;padding:5px">${check(i.pneu_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Luzes</td><td style="border:1px solid #ccc;padding:5px">${check(i.luzes_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Fluídos</td><td style="border:1px solid #ccc;padding:5px">${check(i.fluidos_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Lataria</td><td style="border:1px solid #ccc;padding:5px">${check(i.lataria_ok)}</td></tr><tr><td style="border:1px solid #ccc;padding:5px">Interior</td><td style="border:1px solid #ccc;padding:5px">${check(i.interior_ok)}</td></tr></table><p><b>OBS:</b> ${i.observacao||'-'}</p><div style="text-align:center"><img src="${i.foto_url}" style="max-height:300px;margin:20px"></div><div style="text-align:center;margin-top:40px">${ass}</div><script>setTimeout(()=>window.print(),2000)<\/script></body></html>`);}
     </script>
 </body>
 </html>
