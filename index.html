@@ -3,124 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Logística v24</title>
+    <title>App Frota v30</title>
     <meta name="theme-color" content="#1e40af">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style> 
-        /* Bloqueia seleção e zoom para desenhar melhor */
-        canvas { touch-action: none; cursor: crosshair; }
-        body { user-select: none; -webkit-user-select: none; }
-    </style>
+    <style> canvas { touch-action: none; background-color: #fff; cursor: crosshair; } body { user-select: none; padding-bottom: 80px; } </style>
 </head>
-<body class="bg-gray-100 min-h-screen pb-10">
+<body class="bg-slate-100 min-h-screen font-sans">
 
-    <!-- TELA DE ASSINATURA (MODAL FULL SCREEN) -->
-    <div id="modalAssinatura" class="hidden fixed inset-0 z-[60] bg-white flex flex-col">
-        <!-- Topo Modal -->
-        <div class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md">
-            <h2 class="font-bold text-lg"><i class="fas fa-pen-nib mr-2"></i>Assine Abaixo</h2>
-            <button onclick="fecharAssinatura()" class="text-gray-400 text-sm">Cancelar</button>
-        </div>
-        
-        <!-- Área de Desenho (Ocupa todo o meio) -->
-        <div class="flex-1 relative bg-gray-50 overflow-hidden" id="canvasContainer">
-            <p class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-300 text-4xl pointer-events-none font-bold opacity-20">ASSINAR AQUI</p>
-            <canvas id="signature-pad" class="w-full h-full block"></canvas>
-        </div>
-
-        <!-- Rodapé Modal -->
-        <div class="p-4 bg-white border-t flex gap-3">
-            <button onclick="limparCanvas()" class="flex-1 py-3 border border-red-500 text-red-500 rounded-lg font-bold">LIMPAR</button>
-            <button onclick="confirmarAssinatura()" class="flex-[2] py-3 bg-green-600 text-white rounded-lg font-bold shadow-lg">CONFIRMAR</button>
+    <!-- LOGIN -->
+    <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-[60] flex flex-col items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center border-b-4 border-blue-600">
+            <img src="https://cdn-icons-png.flaticon.com/512/2203/2203124.png" class="w-24 mx-auto mb-6 logo-img object-contain">
+            <h1 class="text-2xl font-black text-slate-800 tracking-tighter">PORTARIA<span class="text-blue-600">DIGITAL</span></h1>
+            <p class="text-gray-400 text-xs mb-8 font-medium">Acesso Condutor</p>
+            <div class="text-left mb-4"><label class="text-[10px] font-bold text-gray-400 uppercase">Motorista</label><div class="relative"><select id="loginUsuario" class="w-full p-3 bg-slate-50 border rounded-lg font-bold text-slate-700 appearance-none"><option>Carregando...</option></select><div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div></div></div>
+            <div class="text-left mb-8"><label class="text-[10px] font-bold text-gray-400 uppercase">PIN</label><input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border rounded-lg text-center text-3xl font-bold tracking-widest text-slate-800" placeholder="••••"></div>
+            <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">ACESSAR</button>
         </div>
     </div>
 
-    <!-- TELA 1: LOGIN -->
-    <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl text-center">
-            <img src="https://cdn-icons-png.flaticon.com/512/2203/2203124.png" class="w-28 mx-auto mb-6 logo-img object-contain">
-            <h1 class="text-xl font-bold text-slate-800">PORTARIA DIGITAL</h1>
-            
-            <div class="text-left mb-4 mt-6">
-                <label class="text-[10px] font-bold text-gray-400 uppercase">Motorista</label>
-                <div class="relative"><select id="loginUsuario" class="w-full p-3 bg-slate-50 border rounded-lg font-bold text-slate-700 appearance-none"><option value="">Carregando...</option></select><div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div></div>
-            </div>
-            <div class="text-left mb-8">
-                <label class="text-[10px] font-bold text-gray-400 uppercase">PIN</label>
-                <input type="tel" id="loginPin" maxlength="4" class="w-full p-3 border rounded-lg text-center text-3xl font-bold tracking-widest text-slate-800" placeholder="••••">
-            </div>
-            <button onclick="fazerLogin()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">ENTRAR</button>
-        </div>
-    </div>
-
-    <!-- TELA 2: MENU -->
-    <div id="telaMenu" class="hidden fixed inset-0 bg-gray-100 z-40 flex flex-col p-6">
+    <!-- MENU DE OPERAÇÃO -->
+    <div id="telaMenu" class="hidden fixed inset-0 bg-gray-100 z-50 flex flex-col p-6">
         <div class="flex justify-between items-center mb-8 mt-4">
-            <div><h2 class="text-2xl font-bold text-slate-800">Olá, <span id="nomeMenu">...</span></h2><p class="text-gray-500 text-sm">Operação:</p></div>
-            <button onclick="sair()" class="text-red-500 font-bold text-sm bg-white px-3 py-1 rounded shadow">SAIR</button>
+            <div><h2 class="text-2xl font-bold text-slate-800">Olá, <span id="nomeMenu" class="text-blue-600">...</span></h2><p class="text-gray-500 text-sm">Selecione a atividade:</p></div>
+            <button onclick="sair()" class="text-slate-400 font-bold text-xs border px-3 py-1 rounded bg-white">SAIR</button>
         </div>
         <div class="grid grid-cols-1 gap-4">
-            <button onclick="iniciarOperacao('SAIDA')" class="bg-white p-6 rounded-2xl shadow-md border-l-8 border-green-500 flex items-center gap-4 active:scale-95 transition"><div class="bg-green-100 p-4 rounded-full text-green-600"><i class="fas fa-truck-moving text-3xl"></i></div><div class="text-left"><h3 class="font-bold text-xl text-slate-800">SAÍDA</h3><p class="text-xs text-gray-400">Iniciar Rota</p></div></button>
-            <button onclick="iniciarOperacao('RETORNO')" class="bg-white p-6 rounded-2xl shadow-md border-l-8 border-blue-500 flex items-center gap-4 active:scale-95 transition"><div class="bg-blue-100 p-4 rounded-full text-blue-600"><i class="fas fa-warehouse text-3xl"></i></div><div class="text-left"><h3 class="font-bold text-xl text-slate-800">RETORNO</h3><p class="text-xs text-gray-400">Finalizar Rota</p></div></button>
+            <button onclick="iniciarOperacao('SAIDA')" class="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-green-500 flex items-center gap-4 active:scale-95 transition group">
+                <div class="bg-green-50 p-4 rounded-full text-green-600"><i class="fas fa-truck-moving text-3xl"></i></div>
+                <div class="text-left"><h3 class="font-bold text-xl text-slate-800">SAÍDA / ROTA</h3><p class="text-xs text-gray-400">Iniciar viagem</p></div>
+            </button>
+            <button onclick="iniciarOperacao('RETORNO')" class="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-blue-500 flex items-center gap-4 active:scale-95 transition group">
+                <div class="bg-blue-50 p-4 rounded-full text-blue-600"><i class="fas fa-warehouse text-3xl"></i></div>
+                <div class="text-left"><h3 class="font-bold text-xl text-slate-800">RETORNO / PÁTIO</h3><p class="text-xs text-gray-400">Finalizar viagem</p></div>
+            </button>
         </div>
     </div>
 
-    <!-- TELA 3: FORMULÁRIO -->
+    <!-- APP CONTEÚDO (Abas) -->
     <div id="appConteudo" class="hidden">
-        <div class="bg-blue-900 p-6 shadow-lg rounded-b-3xl flex justify-between items-center text-white">
-            <div><h1 class="font-bold text-xl" id="tituloOperacao">CHECKLIST</h1><p id="labelMotorista" class="text-blue-200 text-xs">Motorista...</p></div>
-            <button onclick="voltarMenu()" class="bg-blue-800 px-3 py-1 rounded text-xs border border-blue-600">VOLTAR</button>
+        
+        <!-- HEADER FIXO -->
+        <div class="bg-slate-900 p-6 shadow-lg rounded-b-3xl flex justify-between items-center text-white fixed top-0 w-full z-40">
+            <div><h1 class="font-bold text-lg leading-none text-blue-400" id="tituloOperacao">CHECKLIST</h1><p id="labelMotorista" class="text-slate-400 text-xs font-medium mt-1">...</p></div>
+            <button onclick="voltarMenu()" class="bg-slate-800 px-3 py-1 rounded text-xs border border-slate-700 text-slate-300">VOLTAR</button>
         </div>
 
-        <div class="p-4 space-y-5 max-w-md mx-auto -mt-4">
-            <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">1. Veículo</h3>
-                <div class="relative"><select id="placa" onchange="salvarRascunho()" class="w-full p-3 bg-blue-50 border rounded-lg text-xl font-bold text-center uppercase appearance-none"><option>Carregando...</option></select><div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-blue-800">▼</div></div>
-                <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-bold text-gray-400 uppercase">KM</label><input type="number" id="km" oninput="salvarRascunho()" class="w-full p-2 border rounded font-bold" placeholder="0"></div><div><label class="text-[10px] font-bold text-gray-400 uppercase">Tanque</label><select id="combustivel" onchange="salvarRascunho()" class="w-full p-2 border rounded bg-white"><option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Reserva</option></select></div></div>
-            </div>
+        <!-- ESPAÇAMENTO DO TOPO -->
+        <div class="h-24"></div>
 
-            <div class="bg-white p-5 rounded-xl shadow-md space-y-3">
-                <h3 class="text-blue-900 font-bold border-b pb-2 text-sm uppercase">2. Inspeção</h3>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Pneus</label><select id="pneu_ok" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Luzes</label><select id="luzes_ok" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Fluídos</label><select id="fluidos_ok" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Lataria</label><select id="lataria_ok" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
-                    <div class="flex justify-between items-center"><label class="font-bold text-sm text-gray-600">Interior</label><select id="interior_ok" class="border p-1 w-28 text-sm font-bold bg-gray-50"><option value="true">✅ OK</option><option value="false">❌ Falha</option></select></div>
+        <!-- ABA 1: FORMULÁRIO -->
+        <div id="tabFormulario" class="p-4 space-y-5 max-w-md mx-auto">
+            
+            <!-- Veículo -->
+            <div class="bg-white p-5 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-end border-b pb-2"><h3 class="text-slate-700 font-bold text-xs uppercase tracking-wide">Veículo</h3><i id="iconeVeiculo" class="fas fa-shuttle-van text-2xl text-slate-300"></i></div>
+                <div class="relative"><select id="placa" onchange="atualizarIconeCarro()" class="w-full p-3 bg-slate-50 border rounded-lg text-xl font-black text-center uppercase appearance-none text-slate-800"><option>Carregando...</option></select><div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">▼</div></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase">KM</label><input type="number" id="km" class="w-full p-2 border rounded font-bold text-slate-700" placeholder="0"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase">Tanque</label><select id="combustivel" class="w-full p-2 border rounded bg-white text-slate-700"><option>Cheio</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Reserva</option></select></div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500">
-                <h3 class="text-blue-900 font-bold text-sm uppercase mb-2">3. Evidência</h3>
-                <label class="block w-full p-6 border-2 border-dashed border-blue-300 rounded-xl text-center cursor-pointer hover:bg-blue-50 transition"><i class="fas fa-camera text-2xl text-blue-400"></i><span class="block text-blue-800 font-bold text-xs mt-1">TIRAR FOTO</span><input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="fotoTirada()"></label>
-                <p id="msgFoto" class="text-center text-xs text-green-600 font-bold hidden mt-2">✅ Foto OK!</p>
-                <textarea id="observacao" oninput="salvarRascunho()" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-gray-50" placeholder="Obs..."></textarea>
-            </div>
-
-            <!-- BOTÃO DE ASSINATURA OBRIGATÓRIA -->
-            <div class="bg-white p-5 rounded-xl shadow-md border-2 border-red-100" id="cardAssinatura">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-red-800 font-bold text-sm uppercase"><i class="fas fa-file-contract mr-1"></i> Validação</h3>
-                    <span class="bg-red-100 text-red-600 text-[10px] px-2 py-1 rounded font-bold" id="statusAssinatura">PENDENTE</span>
+            <!-- Checklist Rápido -->
+            <div class="bg-white p-5 rounded-xl shadow-sm space-y-3">
+                <h3 class="text-slate-700 font-bold border-b pb-2 text-xs uppercase tracking-wide">Inspeção</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100"><label class="font-bold text-sm text-gray-600">Portas/Caçamba</label><select id="item_portas" class="border rounded p-1 w-24 text-xs font-bold bg-slate-50"><option value="true">OK</option><option value="false">FALHA</option></select></div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100"><label class="font-bold text-sm text-gray-600">Pneus</label><select id="item_pneus" class="border rounded p-1 w-24 text-xs font-bold bg-slate-50"><option value="true">OK</option><option value="false">FALHA</option></select></div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100"><label class="font-bold text-sm text-gray-600">Luzes</label><select id="item_luzes" class="border rounded p-1 w-24 text-xs font-bold bg-slate-50"><option value="true">OK</option><option value="false">FALHA</option></select></div>
+                    <div class="flex justify-between items-center py-1 border-b border-gray-100"><label class="font-bold text-sm text-gray-600">Fluídos</label><select id="item_fluidos" class="border rounded p-1 w-24 text-xs font-bold bg-slate-50"><option value="true">OK</option><option value="false">FALHA</option></select></div>
+                    <div class="flex justify-between items-center py-1"><label class="font-bold text-sm text-gray-600">Lataria</label><select id="item_lataria" class="border rounded p-1 w-24 text-xs font-bold bg-slate-50"><option value="true">OK</option><option value="false">FALHA</option></select></div>
                 </div>
-                <p class="text-xs text-gray-500 mb-3">A assinatura digital é obrigatória para finalizar.</p>
-                
-                <button onclick="abrirAssinatura()" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 font-bold hover:bg-slate-50 transition flex items-center justify-center gap-2" id="btnAssinar">
-                    <i class="fas fa-pen"></i> TOQUE PARA ASSINAR
-                </button>
-                
-                <!-- Preview da Assinatura (Escondido no início) -->
-                <img id="previewAssinatura" class="hidden w-full h-24 object-contain mt-2 border rounded bg-white">
             </div>
 
-            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-green-600 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center grayscale cursor-not-allowed" disabled>
-                <span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i>
+            <!-- Evidência -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500">
+                <div class="flex gap-2">
+                    <label class="flex-1 p-4 border-2 border-dashed border-slate-300 rounded-lg text-center cursor-pointer hover:bg-slate-50 transition flex flex-col items-center justify-center h-24">
+                        <i class="fas fa-camera text-xl text-slate-400 mb-1"></i><span class="text-[10px] font-bold text-slate-600 uppercase" id="lblFoto">FOTO</span><input type="file" id="foto" accept="image/*" capture="environment" class="hidden" onchange="document.getElementById('lblFoto').innerText='✅ OK'; document.getElementById('lblFoto').classList.add('text-green-600')">
+                    </label>
+                    <button onclick="abrirAssinatura()" class="flex-1 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 flex flex-col items-center justify-center h-24" id="btnAssinarPrincipal">
+                        <i class="fas fa-pen-nib text-xl text-slate-400 mb-1"></i><span class="text-[10px] font-bold text-slate-600 uppercase">ASSINAR</span>
+                    </button>
+                </div>
+                <textarea id="observacao" rows="2" class="w-full p-3 border rounded-lg text-sm mt-3 bg-slate-50" placeholder="Observações..."></textarea>
+            </div>
+
+            <button onclick="enviarDados()" id="btnEnviar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-xl shadow-lg active:scale-95 text-lg flex justify-center gap-2 items-center transition"><span>ENVIAR REGISTRO</span> <i class="fas fa-paper-plane"></i></button>
+        </div>
+
+        <!-- ABA 2: HISTÓRICO (NOVO) -->
+        <div id="tabHistorico" class="hidden p-4 space-y-4 max-w-md mx-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-700">Meus Últimos Envios</h3>
+                <button onclick="carregarHistorico()" class="text-blue-600"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div id="listaHistorico" class="space-y-3 pb-20">
+                <p class="text-center text-gray-400 mt-10">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- NAVEGAÇÃO INFERIOR -->
+        <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around p-3 z-40 shadow-lg">
+            <button onclick="mudarAba('tabFormulario')" class="flex flex-col items-center text-blue-600 w-1/2 border-r border-gray-100" id="navForm">
+                <i class="fas fa-clipboard-list text-xl mb-1"></i><span class="text-[10px] font-bold">CHECKLIST</span>
             </button>
-            <p class="text-center text-xs text-gray-400 mt-4 pb-4">v24.0 - Assinatura Full</p>
+            <button onclick="mudarAba('tabHistorico')" class="flex flex-col items-center text-gray-400 w-1/2 hover:text-blue-400 transition" id="navHist">
+                <i class="fas fa-history text-xl mb-1"></i><span class="text-[10px] font-bold">MEU HISTÓRICO</span>
+            </button>
         </div>
+
+    </div>
+
+    <!-- MODAL ASSINATURA -->
+    <div id="modalAssinatura" class="hidden fixed inset-0 z-[70] bg-white flex flex-col">
+        <div class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md"><h2 class="font-bold"><i class="fas fa-file-contract mr-2"></i>Assinatura</h2></div>
+        <div class="flex-1 bg-gray-50 relative" id="canvasContainer"><canvas id="signature-pad" class="w-full h-full"></canvas></div>
+        <div class="p-4 bg-white border-t flex gap-3"><button onclick="limparAssinatura()" class="flex-1 py-3 text-red-500 font-bold border rounded-lg">LIMPAR</button><button onclick="confirmarAssinatura()" class="flex-[2] py-3 bg-green-600 text-white font-bold rounded-lg shadow">CONFIRMAR</button></div>
     </div>
 
     <script>
@@ -128,126 +131,117 @@
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
-        let motoristaAtual="", operacaoAtual="SAIDA", assinou = false;
+        let motoristaAtual="", operacaoAtual="SAIDA", assinou=false;
 
         window.onload = async function() {
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
-            carregarUsuarios(); carregarFrota();
+            carregarUsuarios(); carregarFrota(); 
             const salvo = localStorage.getItem('usuario_logado');
             if(salvo) { motoristaAtual = salvo; mostrarMenu(); }
         };
 
-        // --- LÓGICA DE ASSINATURA FULL SCREEN ---
-        const canvas = document.getElementById('signature-pad');
-        const ctx = canvas.getContext('2d');
-        let writingMode = false;
-
-        function abrirAssinatura() {
-            document.getElementById('modalAssinatura').classList.remove('hidden');
-            // Redimensiona o canvas para o tamanho da tela
-            setTimeout(() => {
-                const container = document.getElementById('canvasContainer');
-                canvas.width = container.offsetWidth;
-                canvas.height = container.offsetHeight;
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.strokeStyle = '#000';
-            }, 100);
-        }
-
-        function fecharAssinatura() {
-            document.getElementById('modalAssinatura').classList.add('hidden');
-        }
-
-        function confirmarAssinatura() {
-            // Verifica se tem algo desenhado (simples check de dados)
-            // Para simplificar, assumimos que se clicou confirmar, está ok.
-            assinou = true;
+        // --- SISTEMA DE ABAS E HISTÓRICO (NOVO) ---
+        function mudarAba(aba) {
+            document.getElementById('tabFormulario').classList.add('hidden');
+            document.getElementById('tabHistorico').classList.add('hidden');
+            document.getElementById(aba).classList.remove('hidden');
             
-            // Atualiza UI
-            document.getElementById('statusAssinatura').innerText = "ASSINADO";
-            document.getElementById('statusAssinatura').className = "bg-green-100 text-green-600 text-[10px] px-2 py-1 rounded font-bold";
-            document.getElementById('cardAssinatura').className = "bg-white p-5 rounded-xl shadow-md border-2 border-green-500";
-            document.getElementById('btnAssinar').innerHTML = '<i class="fas fa-check"></i> ASSINATURA REGISTRADA';
-            document.getElementById('btnAssinar').classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+            // Estilo dos botões
+            document.getElementById('navForm').className = aba === 'tabFormulario' ? 'flex flex-col items-center text-blue-600 w-1/2 border-r border-gray-100' : 'flex flex-col items-center text-gray-400 w-1/2 border-r border-gray-100';
+            document.getElementById('navHist').className = aba === 'tabHistorico' ? 'flex flex-col items-center text-blue-600 w-1/2' : 'flex flex-col items-center text-gray-400 w-1/2';
+
+            if(aba === 'tabHistorico') carregarHistorico();
+        }
+
+        async function carregarHistorico() {
+            const lista = document.getElementById('listaHistorico');
+            lista.innerHTML = '<p class="text-center text-gray-400 mt-10"><i class="fas fa-spinner fa-spin"></i> Atualizando...</p>';
             
-            // Libera botão Enviar
-            document.getElementById('btnEnviar').classList.remove('grayscale', 'cursor-not-allowed');
-            document.getElementById('btnEnviar').disabled = false;
+            // Busca apenas os registros DO MOTORISTA LOGADO
+            const { data, error } = await sb.from('checklists')
+                .select('*')
+                .eq('motorista', motoristaAtual)
+                .order('created_at', {ascending:false})
+                .limit(20);
 
-            // Gera preview
-            const dataUrl = canvas.toDataURL();
-            const imgPreview = document.getElementById('previewAssinatura');
-            imgPreview.src = dataUrl;
-            imgPreview.classList.remove('hidden');
+            if(error || !data) return lista.innerHTML = '<p class="text-center text-red-400">Erro ao carregar.</p>';
+            if(data.length === 0) return lista.innerHTML = '<p class="text-center text-gray-400 mt-10">Nenhum registro encontrado.</p>';
 
-            fecharAssinatura();
+            lista.innerHTML = '';
+            data.forEach(i => {
+                // Lógica de Status (Mesma do Admin)
+                const ok = (i.pneu_ok!==false && i.luzes_ok!==false && i.fluidos_ok!==false && i.lataria_ok!==false && i.interior_ok!==false);
+                let status = i.status_manutencao || (ok ? 'CONCLUIDO' : 'PENDENTE');
+                
+                let badge = '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold">OK</span>';
+                if(!ok) {
+                    if(status === 'PENDENTE') badge = '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold">PENDENTE</span>';
+                    else if(status === 'EM_ANALISE') badge = '<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold">EM OFICINA</span>';
+                    else badge = '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold">RESOLVIDO</span>';
+                }
+
+                lista.innerHTML += `
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-slate-700 text-sm">${i.tipo_operacao} - ${i.placa}</p>
+                            <p class="text-xs text-gray-400">${new Date(i.created_at).toLocaleDateString()} ${new Date(i.created_at).toLocaleTimeString().slice(0,5)}</p>
+                        </div>
+                        ${badge}
+                    </div>
+                `;
+            });
         }
 
-        function limparCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Eventos de Desenho
-        const getPos = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const t = e.touches ? e.touches[0] : e;
-            return { x: t.clientX - rect.left, y: t.clientY - rect.top };
-        }
-        const start = (e) => { writingMode = true; ctx.beginPath(); const{x,y}=getPos(e); ctx.moveTo(x,y); e.preventDefault(); }
-        const end = (e) => { writingMode = false; e.preventDefault(); }
-        const move = (e) => { if(!writingMode)return; const{x,y}=getPos(e); ctx.lineTo(x,y); ctx.stroke(); e.preventDefault(); }
-        
-        canvas.addEventListener('touchstart', start, {passive:false});
-        canvas.addEventListener('touchend', end, {passive:false});
-        canvas.addEventListener('touchmove', move, {passive:false});
-        canvas.addEventListener('mousedown', start);
-        canvas.addEventListener('mouseup', end);
-        canvas.addEventListener('mousemove', move);
-
-
-        // --- RESTO DO SISTEMA (MANTIDO) ---
+        // Funções Padrão (Login, Menu, Envio, Assinatura)
         function mostrarMenu() { document.getElementById('telaLogin').classList.add('hidden'); document.getElementById('appConteudo').classList.add('hidden'); document.getElementById('telaMenu').classList.remove('hidden'); document.getElementById('nomeMenu').innerText = motoristaAtual; }
-        function iniciarOperacao(t) { operacaoAtual=t; document.getElementById('telaMenu').classList.add('hidden'); document.getElementById('appConteudo').classList.remove('hidden'); document.getElementById('tituloOperacao').innerText = t==='SAIDA'?'CHECKLIST SAÍDA':'CHECKLIST RETORNO'; document.getElementById('labelMotorista').innerText = motoristaAtual; recuperarRascunho(); }
+        function iniciarOperacao(t) { operacaoAtual=t; document.getElementById('telaMenu').classList.add('hidden'); document.getElementById('appConteudo').classList.remove('hidden'); document.getElementById('tituloOperacao').innerText = t==='SAIDA'?'SAÍDA':'RETORNO'; document.getElementById('labelMotorista').innerText = motoristaAtual; atualizarIconeCarro(); mudarAba('tabFormulario'); }
         function voltarMenu() { document.getElementById('appConteudo').classList.add('hidden'); document.getElementById('telaMenu').classList.remove('hidden'); }
         async function carregarUsuarios() { const s=document.getElementById('loginUsuario'); const {data}=await sb.from('funcionarios').select('*').order('nome'); s.innerHTML='<option value="">Selecione...</option>'; data.forEach(u=>s.innerHTML+=`<option value="${u.nome}" data-pin="${u.pin}">${u.nome}</option>`); }
-        function fazerLogin() { const s=document.getElementById('loginUsuario'); const p=document.getElementById('loginPin').value; const u=s.value; const rp=s.options[s.selectedIndex].getAttribute('data-pin'); if(u&&p===rp){ motoristaAtual=u; localStorage.setItem('usuario_logado',u); mostrarMenu(); } else alert("PIN Incorreto!"); }
+        function fazerLogin() { const s=document.getElementById('loginUsuario'); const pin=document.getElementById('loginPin').value; const u=s.value; const rp=s.options[s.selectedIndex].getAttribute('data-pin'); if(u&&pin===rp){ motoristaAtual=u; localStorage.setItem('usuario_logado',u); mostrarMenu(); } else alert("PIN Incorreto!"); }
         function sair() { localStorage.removeItem('usuario_logado'); window.location.reload(); }
         async function carregarFrota() { const s=document.getElementById('placa'); const {data}=await sb.from('frota').select('*').order('placa'); if(data) data.forEach(v=>s.innerHTML+=`<option value="${v.placa}">${v.placa} - ${v.modelo}</option>`); }
-        function salvarRascunho() { const d={placa:document.getElementById('placa').value, km:document.getElementById('km').value, obs:document.getElementById('observacao').value}; localStorage.setItem('rascunho',JSON.stringify(d)); }
-        function recuperarRascunho() { const r=localStorage.getItem('rascunho'); if(r){const d=JSON.parse(r); document.getElementById('placa').value=d.placa||""; document.getElementById('km').value=d.km||""; document.getElementById('observacao').value=d.obs||""; } }
-        function fotoTirada() { document.getElementById('msgFoto').classList.remove('hidden'); }
+        function atualizarIconeCarro() { const t = document.getElementById('placa').options[document.getElementById('placa').selectedIndex].text.toUpperCase(); const i = document.getElementById('iconeVeiculo'); if(t.includes('STRADA')) i.className="fas fa-truck-pickup text-2xl text-blue-600"; else i.className="fas fa-shuttle-van text-2xl text-red-600"; }
+        
+        // Assinatura
+        const canvas=document.getElementById('signature-pad'); const ctx=canvas.getContext('2d');
+        function abrirAssinatura(){document.getElementById('modalAssinatura').classList.remove('hidden');setTimeout(()=>{canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.lineWidth=3;ctx.lineCap='round'},100)}
+        function confirmarAssinatura(){assinou=true;document.getElementById('btnAssinarPrincipal').innerHTML='<i class="fas fa-check text-green-500 text-xl"></i><span class="text-[10px] font-bold text-green-600">OK</span>';document.getElementById('btnAssinarPrincipal').classList.add('border-green-500','bg-green-50');document.getElementById('modalAssinatura').classList.add('hidden')}
+        function limparAssinatura(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height)}
+        const getPos=(e)=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}};
+        let drawing=false;
+        canvas.addEventListener('touchstart',(e)=>{drawing=true;ctx.beginPath();const{x,y}=getPos(e);ctx.moveTo(x,y);e.preventDefault()});
+        canvas.addEventListener('touchmove',(e)=>{if(!drawing)return;const{x,y}=getPos(e);ctx.lineTo(x,y);ctx.stroke();e.preventDefault()});
+        canvas.addEventListener('touchend',()=>{drawing=false});
+        canvas.addEventListener('mousedown',(e)=>{drawing=true;ctx.beginPath();const{x,y}=getPos(e);ctx.moveTo(x,y)});
+        canvas.addEventListener('mousemove',(e)=>{if(!drawing)return;const{x,y}=getPos(e);ctx.lineTo(x,y);ctx.stroke()});
+        canvas.addEventListener('mouseup',()=>{drawing=false});
 
         async function enviarDados() {
             const btn=document.getElementById('btnEnviar');
             if(!document.getElementById('placa').value || !document.getElementById('km').value || !document.getElementById('foto').files[0]) return alert("Preencha Placa, KM e Foto!");
-            if(!assinou) return alert("A assinatura é obrigatória!");
-
+            if(!assinou) return alert("Assine para continuar!");
+            
             btn.disabled=true; btn.innerHTML='ENVIANDO...'; btn.classList.add('opacity-50');
             navigator.geolocation.getCurrentPosition(async (pos)=>{
                 try {
-                    const arqFoto = document.getElementById('foto').files[0];
-                    const nomeFoto = `foto_${Date.now()}.jpg`;
-                    await sb.storage.from('evidencias').upload(nomeFoto, arqFoto);
-                    const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
-
-                    const assBlob = await new Promise(r=>canvas.toBlob(r, 'image/jpeg')); // JPEG fundo branco
-                    const nomeAss = `ass_${Date.now()}.jpg`;
+                    const nomeFoto=`foto_${Date.now()}.jpg`; await sb.storage.from('evidencias').upload(nomeFoto, document.getElementById('foto').files[0]);
+                    const fotoUrl=`${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeFoto}`;
+                    const assBlob=await new Promise(r=>canvas.toBlob(r,'image/jpeg')); const nomeAss=`ass_${Date.now()}.jpg`;
                     await sb.storage.from('evidencias').upload(nomeAss, assBlob);
-                    const assUrl = `${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
+                    const assUrl=`${PROJECT_URL}/storage/v1/object/public/evidencias/${nomeAss}`;
 
                     await sb.from('checklists').insert({
                         tipo_operacao:operacaoAtual, placa:document.getElementById('placa').value, motorista:motoristaAtual, km:document.getElementById('km').value, combustivel:document.getElementById('combustivel').value,
-                        pneu_ok:document.getElementById('pneu_ok').value==='true', luzes_ok:document.getElementById('luzes_ok').value==='true', fluidos_ok:document.getElementById('fluidos_ok').value==='true',
-                        lataria_ok:document.getElementById('lataria_ok').value==='true', interior_ok:document.getElementById('interior_ok').value==='true',
+                        pneu_ok:document.getElementById('item_pneus').value==='true', luzes_ok:document.getElementById('item_luzes').value==='true', fluidos_ok:document.getElementById('item_fluidos').value==='true',
+                        lataria_ok:document.getElementById('item_lataria').value==='true', interior_ok:document.getElementById('item_portas').value==='true',
                         observacao:document.getElementById('observacao').value, foto_url:fotoUrl, assinatura_url:assUrl, latitude:pos.coords.latitude, longitude:pos.coords.longitude
                     });
-                    localStorage.removeItem('rascunho'); alert("✅ SUCESSO!"); voltarMenu();
-                    btn.disabled=false; btn.innerHTML='ENVIAR REGISTRO'; btn.classList.remove('opacity-50'); document.getElementById('foto').value=""; limparAssinatura();
+                    
+                    alert("✅ REGISTRO ENVIADO!"); 
+                    // Em vez de recarregar a página toda, vamos para a aba de histórico
+                    mudarAba('tabHistorico');
+                    btn.disabled=false; btn.innerHTML='ENVIAR REGISTRO'; btn.classList.remove('opacity-50'); 
+                    // Reseta form (opcional)
                 } catch(e){ alert("Erro: "+e.message); btn.disabled=false; }
             }, ()=>{alert("Ative GPS"); btn.disabled=false;}, {enableHighAccuracy:true});
         }
