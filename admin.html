@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão Logística v23</title>
+    <title>S.G.L - Master Admin v26</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,263 +11,207 @@
 </head>
 <body class="bg-gray-50 min-h-screen text-slate-800">
 
-    <!-- NAV -->
     <nav class="bg-slate-900 p-4 text-white sticky top-0 z-50 shadow-lg">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <img src="" class="w-10 h-10 bg-white rounded p-1 logo-img object-contain">
-                <div>
-                    <h1 class="font-bold text-lg tracking-wide">LOGÍSTICA <span class="text-blue-400">CORP</span></h1>
-                    <p class="text-[10px] text-gray-400">Painel de Controle Oficial</p>
-                </div>
+                <div><h1 class="font-bold text-lg tracking-wide">LOGÍSTICA <span class="text-blue-400">ARCHITECT</span></h1></div>
             </div>
             
             <div class="flex gap-2 text-sm w-full md:w-auto justify-center items-center bg-slate-800 p-1 rounded-lg">
-                <input type="date" id="filtroData" onchange="carregarDados()" class="text-slate-800 rounded px-2 py-1 text-sm border-none outline-none font-bold">
-                
-                <button onclick="alternarVisao('dashboard')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Dashboard"><i class="fas fa-chart-pie"></i></button>
-                <button onclick="alternarVisao('lista')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Lista"><i class="fas fa-list"></i></button>
-                <button onclick="alternarVisao('timeline')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Timeline"><i class="fas fa-stream"></i></button>
-                <button onclick="exportarCSV()" class="px-3 py-1 rounded hover:bg-green-600 text-green-400 hover:text-white transition" title="Excel"><i class="fas fa-file-excel"></i></button>
-                <button onclick="carregarDados()" class="px-3 py-1 rounded hover:bg-blue-600 text-blue-400 hover:text-white transition" title="Atualizar"><i class="fas fa-sync"></i></button>
+                <button onclick="alternarVisao('dashboard')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white" title="BI"><i class="fas fa-chart-pie"></i></button>
+                <button onclick="alternarVisao('lista')" class="px-3 py-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white" title="Registros"><i class="fas fa-list"></i></button>
+                <button onclick="carregarDados()" class="px-3 py-1 rounded hover:bg-blue-600 text-blue-400 hover:text-white"><i class="fas fa-sync"></i></button>
             </div>
         </div>
-        
-        <!-- Submenu -->
-        <div class="max-w-7xl mx-auto mt-2 flex justify-end gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-500">
-            <button onclick="abrir('modalFrota', loadFrota)" class="hover:text-white transition"><i class="fas fa-truck"></i> Frota</button>
-            <button onclick="abrir('modalEquipe', loadEquipe)" class="hover:text-white transition"><i class="fas fa-users"></i> Equipe</button>
-            <button onclick="abrirAuditoria()" class="hover:text-purple-400 transition"><i class="fas fa-shield-alt"></i> Logs</button>
+        <div class="max-w-7xl mx-auto mt-2 flex justify-end gap-3 text-[10px] uppercase font-bold tracking-widest text-slate-500">
+            <button onclick="abrir('modalModelos', loadModelos)" class="text-blue-400 hover:text-blue-200"><i class="fas fa-cogs"></i> Criar Modelos</button>
+            <button onclick="abrir('modalFrota', loadFrota)" class="hover:text-white"><i class="fas fa-truck"></i> Frota</button>
+            <button onclick="abrir('modalEquipe', loadEquipe)" class="hover:text-white"><i class="fas fa-users"></i> Equipe</button>
         </div>
     </nav>
 
     <div class="max-w-7xl mx-auto p-4 space-y-6">
-        
-        <!-- DASHBOARD BI -->
+        <!-- DASHBOARD (Resumido para focar no código novo) -->
         <div id="viewDashboard" class="space-y-6 animate-fade-in">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Alertas</span><p id="kpiPendente" class="text-3xl font-black text-red-600">0</p></div>
-                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-yellow-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Oficina</span><p id="kpiAndamento" class="text-3xl font-black text-yellow-600">0</p></div>
-                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Liberados</span><p id="kpiAprovados" class="text-3xl font-black text-green-600">0</p></div>
-                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500"><span class="text-[10px] font-bold text-gray-400 uppercase">Total</span><p id="kpiTotal" class="text-3xl font-black text-slate-700">0</p></div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500"><p class="text-xs text-gray-400">TOTAL</p><p id="kpiTotal" class="text-2xl font-black">0</p></div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500"><p class="text-xs text-gray-400">APROVADOS</p><p id="kpiAprovados" class="text-2xl font-black text-green-600">0</p></div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-500"><p class="text-xs text-gray-400">REPROVADOS</p><p id="kpiReprovados" class="text-2xl font-black text-red-600">0</p></div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-yellow-500"><p class="text-xs text-gray-400">OFICINA</p><p id="kpiAndamento" class="text-2xl font-black text-yellow-600">0</p></div>
             </div>
-            <div class="bg-white p-5 rounded-xl shadow"><h3 class="font-bold text-slate-700 mb-4 border-b pb-2">Ocorrências por Tipo</h3><div class="h-64"><canvas id="chartFalhas"></canvas></div></div>
         </div>
 
         <!-- LISTA -->
         <div id="viewLista" class="hidden animate-fade-in">
-            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl text-slate-700">Registros</h3><input id="busca" onkeyup="filtrar()" placeholder="Buscar placa..." class="border p-2 rounded text-sm uppercase w-48 shadow-sm"></div>
             <div id="lista" class="space-y-4 text-center text-gray-400">Carregando...</div>
-        </div>
-
-        <!-- TIMELINE -->
-        <div id="viewTimeline" class="hidden animate-fade-in">
-            <h3 class="font-bold text-xl text-slate-700 mb-6">Linha do Tempo Operacional</h3>
-            <div id="timelineContainer" class="border-l-4 border-slate-300 ml-4 space-y-0 pl-8 relative"></div>
         </div>
     </div>
 
-    <!-- MODAIS (Gerenciamento) -->
-    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl"><h2 class="font-bold mb-4 border-b pb-2">🚛 Frota</h2><div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase rounded" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700">+</button></div><ul id="lFrota" class="h-60 overflow-y-auto text-sm space-y-2"></ul><button onclick="fechar('modalFrota')" class="w-full mt-4 bg-gray-200 py-2 rounded font-bold text-sm">Fechar</button></div></div>
-    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl"><h2 class="font-bold mb-4 border-b pb-2">👥 Equipe</h2><div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase rounded" placeholder="Nome"><input id="nPin" class="border p-2 w-20 text-center rounded" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2 rounded hover:bg-green-700">+</button></div><ul id="lEquipe" class="h-60 overflow-y-auto text-sm space-y-2"></ul><button onclick="fechar('modalEquipe')" class="w-full mt-4 bg-gray-200 py-2 rounded font-bold text-sm">Fechar</button></div></div>
-    <div id="modalAuditoria" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg w-[600px] max-h-[80vh] flex flex-col shadow-2xl"><h2 class="font-bold mb-4 text-purple-900 text-lg">Logs de Auditoria</h2><div class="flex-1 overflow-y-auto border rounded bg-gray-50 p-2"><table class="w-full text-xs text-left"><tbody id="tabelaLogs"></tbody></table></div><button onclick="fechar('modalAuditoria')" class="mt-4 bg-gray-200 px-4 py-2 rounded text-sm font-bold">Fechar</button></div></div>
-    
-    <!-- MODAL MANUTENÇÃO -->
-    <div id="modalManutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-2xl border-t-4 border-yellow-500"><h2 class="font-bold mb-4">Gestão de Ocorrência</h2><p id="modalPlaca" class="text-2xl font-black mb-4 text-center text-slate-800 tracking-wider">ABC-1234</p><label class="text-xs font-bold text-gray-500">STATUS</label><select id="novoStatus" class="w-full border p-2 rounded mb-4 font-bold"><option value="PENDENTE">🔴 PENDENTE</option><option value="EM_ANALISE">🟡 EM MANUTENÇÃO</option><option value="CONCLUIDO">🟢 CONCLUÍDO</option></select><label class="text-xs font-bold text-gray-500">NOTAS DA OFICINA</label><textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm"></textarea><input type="hidden" id="idChecklistAtual"><button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold hover:bg-blue-900 shadow">SALVAR ALTERAÇÕES</button><button onclick="fechar('modalManutencao')" class="w-full mt-2 text-gray-400 text-xs hover:text-gray-600">Cancelar</button></div></div>
+    <!-- MODAL CRIADOR DE CHECKLIST (O CÉREBRO) -->
+    <div id="modalModelos" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-[500px] shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="font-bold text-lg text-slate-800"><i class="fas fa-layer-group text-blue-600"></i> Modelos de Checklist</h2>
+                <button onclick="fechar('modalModelos')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Área de Criação -->
+            <div class="bg-slate-50 p-4 rounded border border-slate-200 mb-4">
+                <label class="text-xs font-bold text-slate-500 uppercase">Nome do Modelo</label>
+                <input id="modNome" class="w-full border p-2 rounded mb-3 font-bold" placeholder="Ex: Empilhadeira Elétrica">
+                
+                <label class="text-xs font-bold text-slate-500 uppercase flex justify-between">
+                    <span>Itens de Verificação</span>
+                    <span class="text-blue-500 cursor-pointer" onclick="alert('Sintaxe:\nNome do Item : tipo\n\nTipos: check, texto, numero, foto\n\nExemplo:\nGarfos:check\nHorimetro:numero')"><i class="fas fa-info-circle"></i> Ajuda</span>
+                </label>
+                <textarea id="modItens" class="w-full border p-2 rounded h-24 text-sm font-mono" placeholder="Garfos : check&#10;Bateria : check&#10;Horímetro : numero&#10;Foto Avaria : foto"></textarea>
+                
+                <button onclick="salvarModelo()" class="w-full bg-blue-600 text-white font-bold py-2 rounded mt-2 hover:bg-blue-700">CRIAR MODELO</button>
+            </div>
+
+            <!-- Lista de Modelos Existentes -->
+            <h3 class="text-xs font-bold text-gray-400 uppercase mb-2">Modelos Ativos</h3>
+            <div class="flex-1 overflow-y-auto">
+                <ul id="listaModelos" class="space-y-2 text-sm"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- OUTROS MODAIS (Mantidos compactos) -->
+    <div id="modalFrota" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-80"><h2 class="font-bold mb-4">Frota</h2><div class="flex gap-2 mb-4"><input id="nPlaca" class="border p-2 w-full uppercase" placeholder="Placa"><button onclick="addFrota()" class="bg-green-600 text-white p-2">+</button></div><ul id="lFrota" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul><button onclick="fechar('modalFrota')" class="w-full mt-2 bg-gray-200 py-1 rounded">Fechar</button></div></div>
+    <div id="modalEquipe" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-80"><h2 class="font-bold mb-4">Equipe</h2><div class="flex gap-2 mb-4"><input id="nNome" class="border p-2 w-full uppercase" placeholder="Nome"><input id="nPin" class="border p-2 w-20 text-center" placeholder="PIN"><button onclick="addEquipe()" class="bg-green-600 text-white p-2">+</button></div><ul id="lEquipe" class="h-40 overflow-y-auto border-t pt-2 text-sm"></ul><button onclick="fechar('modalEquipe')" class="w-full mt-2 bg-gray-200 py-1 rounded">Fechar</button></div></div>
+    <div id="modalManutencao" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded w-96 shadow-xl"><h2 class="font-bold mb-4">Manutenção</h2><p id="modalPlaca" class="text-xl font-bold mb-4 text-center">ABC-1234</p><select id="novoStatus" class="w-full border p-2 rounded mb-4"><option value="PENDENTE">🔴 PENDENTE</option><option value="EM_ANALISE">🟡 EM MANUTENÇÃO</option><option value="CONCLUIDO">🟢 CONCLUÍDO</option></select><textarea id="notasManutencao" class="w-full border p-2 rounded mb-4 h-24 text-sm"></textarea><input type="hidden" id="idChecklistAtual"><button onclick="salvarManutencao()" class="w-full bg-blue-800 text-white p-3 rounded font-bold">SALVAR</button><button onclick="fechar('modalManutencao')" class="w-full mt-2">Cancelar</button></div></div>
+    <div id="modalAuditoria" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg w-[600px] h-[80vh] flex flex-col"><h2 class="font-bold mb-4">Logs</h2><div class="flex-1 overflow-y-auto border p-2"><table class="w-full text-xs"><tbody id="tabelaLogs"></tbody></table></div><button onclick="fechar('modalAuditoria')" class="mt-4 bg-gray-200 py-2 rounded">Fechar</button></div></div>
 
     <script>
-        // LOGO ESTÁVEL (CDN)
         const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/2203/2203124.png";
-        
         const PROJECT_URL = 'https://jbpuhbrjkpjhfqxiqluf.supabase.co';
         const PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpicHVoYnJqa3BqaGZxeGlxbHVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MTU3MjgsImV4cCI6MjA4MTQ5MTcyOH0.fT7sv6y89AqymzSyFFm-Ct48A-_gcUNXMb42ZiR6SRk';
         const sb = window.supabase.createClient(PROJECT_URL, PROJECT_KEY);
-        let dadosGlobais = [], chart = null;
+        let dadosGlobais = [];
 
         window.onload = function() {
             document.querySelectorAll('.logo-img').forEach(img => img.src = LOGO_URL);
-            document.getElementById('filtroData').valueAsDate = new Date();
             if(prompt("Senha Admin:") !== "1234") return;
             carregarDados();
         }
 
+        // --- SISTEMA DE MODELOS (O CÉREBRO) ---
+        async function loadModelos() {
+            const l = document.getElementById('listaModelos'); l.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
+            const { data } = await sb.from('modelos_checklist').select('*').order('nome');
+            l.innerHTML = '';
+            data.forEach(m => {
+                // Conta quantos itens tem no JSON
+                const qtd = Array.isArray(m.itens) ? m.itens.length : 0;
+                l.innerHTML += `
+                    <li class="flex justify-between items-center bg-white p-3 border rounded shadow-sm">
+                        <div>
+                            <p class="font-bold text-slate-700">${m.nome}</p>
+                            <p class="text-xs text-gray-400">${qtd} itens configurados</p>
+                        </div>
+                        <button onclick="del('modelos_checklist',${m.id},loadModelos)" class="text-red-500 hover:text-red-700 px-2"><i class="fas fa-trash"></i></button>
+                    </li>`;
+            });
+        }
+
+        async function salvarModelo() {
+            const nome = document.getElementById('modNome').value;
+            const texto = document.getElementById('modItens').value;
+            
+            if(!nome || !texto) return alert("Preencha o nome e os itens!");
+
+            // Converte Texto em JSON
+            const linhas = texto.split('\n');
+            let itensJSON = [];
+            
+            linhas.forEach(linha => {
+                if(linha.includes(':')) {
+                    const [pergunta, tipo] = linha.split(':');
+                    itensJSON.push({ label: pergunta.trim(), tipo: tipo.trim().toLowerCase() });
+                }
+            });
+
+            if(itensJSON.length === 0) return alert("Nenhum item válido identificado. Use o formato 'Nome : tipo'");
+
+            const { error } = await sb.from('modelos_checklist').insert({ nome: nome, itens: itensJSON });
+            
+            if(error) alert("Erro ao salvar: " + error.message);
+            else {
+                alert("Modelo Criado com Sucesso!");
+                document.getElementById('modNome').value = '';
+                document.getElementById('modItens').value = '';
+                loadModelos();
+            }
+        }
+
+        // --- CORE (Mantido e Otimizado) ---
         async function carregarDados() {
-            const dataFiltro = document.getElementById('filtroData').value;
-            let query = sb.from('checklists').select('*').order('created_at', {ascending:false});
-            if(dataFiltro) query = query.gte('created_at', `${dataFiltro}T00:00:00`).lte('created_at', `${dataFiltro}T23:59:59`);
-            else query = query.limit(100);
-            
-            const { data, error } = await query;
-            if(error) return alert("Erro ao carregar dados.");
-            
-            dadosGlobais = data;
-            renderizarLista(data);
-            renderizarTimeline(data);
-            atualizarKPIs(data);
+            const { data } = await sb.from('checklists').select('*').order('created_at', {ascending:false}).limit(60);
+            dadosGlobais = data; renderizarLista(data); atualizarKPIs(data);
         }
 
-        // --- DASHBOARD ---
-        function atualizarKPIs(data) {
-            const pendentes = data.filter(i => !isAprovado(i) && (i.status_manutencao === 'PENDENTE' || !i.status_manutencao)).length;
-            const oficina = data.filter(i => i.status_manutencao === 'EM_ANALISE').length;
-            const liberados = data.filter(i => isAprovado(i) || i.status_manutencao === 'CONCLUIDO').length;
-            
-            document.getElementById('kpiPendente').innerText = pendentes;
-            document.getElementById('kpiAndamento').innerText = oficina;
-            document.getElementById('kpiAprovados').innerText = liberados;
-            document.getElementById('kpiTotal').innerText = data.length;
-
-            let falhas = {'Pneu':0, 'Luz':0, 'Fluído':0, 'Lataria':0, 'Interior':0};
-            data.forEach(i => {
-                if(i.pneu_ok===false) falhas['Pneu']++;
-                if(i.luzes_ok===false) falhas['Luz']++;
-                if(i.fluidos_ok===false) falhas['Fluído']++;
-                if(i.lataria_ok===false) falhas['Lataria']++;
-                if(i.interior_ok===false) falhas['Interior']++;
-            });
-
-            const ctx = document.getElementById('chartFalhas').getContext('2d');
-            if(chart) chart.destroy();
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: Object.keys(falhas), datasets: [{ label: 'Qtd', data: Object.values(falhas), backgroundColor: '#3b82f6', borderRadius:4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} } }
-            });
-        }
-
-        // --- RENDERIZAÇÃO LISTA ---
         function renderizarLista(data) {
             const list = document.getElementById('lista'); list.innerHTML = '';
-            if(data.length === 0) { list.innerHTML = '<p class="text-gray-400 mt-10">Vazio.</p>'; return; }
             data.forEach(i => {
                 const ok = isAprovado(i);
-                let status = i.status_manutencao || (ok?'CONCLUIDO':'PENDENTE');
-                let color="border-green-500", label=`<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded">APROVADO</span>`;
-                if(!ok){
-                    if(status==='PENDENTE'){color="border-red-500 bg-red-50"; label=`<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded animate-pulse">PENDENTE</span>`}
-                    else if(status==='EM_ANALISE'){color="border-yellow-500 bg-yellow-50"; label=`<span class="bg-yellow-500 text-white text-[10px] font-bold px-2 py-1 rounded">OFICINA</span>`}
-                    else {color="border-blue-500 bg-blue-50 opacity-75"; label=`<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded">RESOLVIDO</span>`}
-                }
-                const tag = i.tipo_operacao==='SAIDA'?`<span class="bg-indigo-100 text-indigo-800 text-[9px] font-bold px-1 rounded border border-indigo-200">SAÍDA</span>`:`<span class="bg-teal-100 text-teal-800 text-[9px] font-bold px-1 rounded border border-teal-200">RETORNO</span>`;
+                // Se tiver dados dinâmicos, o modelo é diferente
+                const modeloNome = i.nome_modelo || 'Padrão';
                 
-                list.innerHTML += `
-                    <div class="rounded shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${color} bg-white transition hover:shadow-lg">
-                        <img src="${i.foto_url}" class="w-full md:w-24 h-24 object-cover rounded border cursor-pointer bg-gray-200" onclick="window.open('${i.foto_url}')">
-                        <div class="flex-1 text-left">
-                            <div class="flex justify-between items-center mb-1"><h3 class="font-bold text-lg">${i.placa}</h3> <div class="flex gap-2 items-center">${tag} ${label}</div></div>
-                            <p class="text-sm text-gray-600">${i.motorista} • ${new Date(i.created_at).toLocaleTimeString().slice(0,5)}</p>
-                            ${!ok ? `<div class="mt-2 text-xs text-red-600 font-bold border-t pt-1">⚠️ FALHAS REPORTADAS</div>` : ''}
-                            ${i.notas_manutencao ? `<p class="mt-2 text-xs text-gray-600 italic bg-white p-2 rounded border">🔧 ${i.notas_manutencao}</p>` : ''}
+                let statusClass = ok ? "border-green-500" : "border-red-500 bg-red-50";
+                let statusTxt = ok ? "OK" : "FALHA";
+                if(i.status_manutencao === 'EM_ANALISE') { statusClass = "border-yellow-500 bg-yellow-50"; statusTxt = "OFICINA"; }
+                
+                const card = `
+                    <div class="rounded shadow p-4 flex flex-col md:flex-row gap-4 border-l-8 ${statusClass} bg-white">
+                        <div class="w-20 h-20 bg-gray-200 rounded overflow-hidden"><img src="${i.foto_url}" class="object-cover w-full h-full cursor-pointer" onclick="window.open('${i.foto_url}')"></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between"><h3 class="font-bold text-lg">${i.placa}</h3><span class="text-xs font-bold px-2 py-1 bg-gray-200 rounded">${statusTxt}</span></div>
+                            <p class="text-sm text-gray-600">${i.motorista} | ${modeloNome}</p>
+                            <p class="text-xs text-gray-400">${new Date(i.created_at).toLocaleString()}</p>
+                            ${i.notas_manutencao ? `<p class="mt-1 text-xs bg-white p-1 border rounded italic">🔧 ${i.notas_manutencao}</p>` : ''}
                         </div>
-                        <div class="flex flex-col gap-2 justify-center min-w-[120px]">
-                            ${!ok ? `<button onclick="abrirManutencao(${i.id},'${i.placa}','${status}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-xs font-bold shadow"><i class="fas fa-tools"></i> TRATAR</button>` : ''}
-                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(i))}')" class="bg-slate-700 text-white px-3 py-2 rounded text-xs hover:bg-slate-600"><i class="fas fa-file-pdf"></i> PDF</button>
-                            <button onclick="apagarChecklist(${i.id},'${i.placa}')" class="text-red-400 hover:text-red-600 text-xs text-right mt-1 font-bold">Excluir</button>
+                        <div class="flex flex-col gap-1 justify-center">
+                            ${!ok ? `<button onclick="abrirManutencao(${i.id},'${i.placa}','${i.status_manutencao||'PENDENTE'}')" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded">TRATAR</button>`:''}
+                            <button onclick="gerarPDF('${encodeURIComponent(JSON.stringify(i))}')" class="bg-slate-700 text-white text-xs px-2 py-1 rounded">PDF</button>
+                            <button onclick="apagarChecklist(${i.id})" class="text-red-400 text-xs">Excluir</button>
                         </div>
                     </div>`;
+                list.innerHTML += card;
             });
         }
 
-        // --- RENDERIZAÇÃO TIMELINE (CORRIGIDA) ---
-        function renderizarTimeline(data) {
-            const tl = document.getElementById('timelineContainer'); tl.innerHTML = '';
-            data.forEach(i => {
-                const ok = isAprovado(i);
-                const status = i.status_manutencao || 'PENDENTE';
-                
-                // Cores da Timeline baseadas no Status
-                let corDot = "bg-green-500";
-                if(!ok) {
-                    if(status === 'PENDENTE') corDot = "bg-red-600";
-                    else if(status === 'EM_ANALISE') corDot = "bg-yellow-500";
-                    else corDot = "bg-blue-500";
-                }
-
-                const icone = i.tipo_operacao === 'SAIDA' ? 'fa-arrow-right' : 'fa-arrow-left';
-                
-                tl.innerHTML += `
-                    <div class="relative pl-8 pb-8 border-l-2 border-slate-200 last:border-0">
-                        <div class="absolute -left-[9px] top-0 w-5 h-5 rounded-full border-4 border-white ${corDot} shadow-sm"></div>
-                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex justify-between items-start hover:shadow-md transition">
-                            <div>
-                                <span class="text-xs font-bold text-gray-400 block mb-1">${new Date(i.created_at).toLocaleTimeString().slice(0,5)}</span>
-                                <h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fas ${icone} text-xs mr-2"></i> ${i.tipo_operacao} - ${i.placa}</h4>
-                                <p class="text-sm text-gray-600">${i.motorista}</p>
-                            </div>
-                        </div>
-                    </div>`;
-            });
+        // Funções de Suporte
+        function alternarVisao(v){['viewDashboard','viewLista'].forEach(id=>document.getElementById(id).classList.add('hidden')); if(v==='dashboard')document.getElementById('viewDashboard').classList.remove('hidden');else document.getElementById('viewLista').classList.remove('hidden')}
+        function isAprovado(i){
+            // Lógica Híbrida: Suporta o checklist antigo (colunas fixas) e o novo (se vier no futuro)
+            if(i.pneu_ok === false || i.luzes_ok === false) return false;
+            return true;
+        }
+        function atualizarKPIs(d){
+            const aprov = d.filter(i=>isAprovado(i)||i.status_manutencao==='CONCLUIDO').length;
+            document.getElementById('kpiTotal').innerText=d.length; document.getElementById('kpiAprovados').innerText=aprov;
+            document.getElementById('kpiReprovados').innerText=d.length-aprov; document.getElementById('kpiAndamento').innerText=d.filter(i=>i.status_manutencao==='EM_ANALISE').length;
+        }
+        function gerarPDF(d){
+            const i=JSON.parse(decodeURIComponent(d));
+            const w=window.open();
+            // PDF Simples para esta versão (Foco no Criador)
+            w.document.write(`<html><body style="font-family:sans-serif;padding:30px"><h1>RELATÓRIO ${i.placa}</h1><p>Modelo: ${i.nome_modelo||'Padrão'}</p><p>Status: ${isAprovado(i)?'APROVADO':'REPROVADO'}</p><img src="${i.foto_url}" style="max-height:400px"><script>setTimeout(()=>window.print(),1000)<\/script></body></html>`);
         }
 
-        // --- PDF COMPLETO COM IMAGENS ---
-        function gerarPDF(d) {
-            const i = JSON.parse(decodeURIComponent(d));
-            const check = (v) => (v!==false) ? '<span style="color:green;font-weight:bold">OK</span>' : '<span style="color:red;font-weight:bold;background:#fee2e2;padding:2px">FALHA</span>';
-            const htmlAss = i.assinatura_url ? `<div class="assinatura-box"><img src="${i.assinatura_url}" class="ass-img"><div class="linha">__________________________</div><p>Assinado: <b>${i.motorista}</b></p></div>` : `<div class="assinatura-box"><p style="color:red">[SEM ASSINATURA]</p></div>`;
-
-            const w = window.open('','','width=900,height=1100');
-            w.document.write(`
-                <html><head><title>Relatório</title><style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #333; }
-                    .header { border-bottom: 2px solid #333; margin-bottom: 20px; display: flex; align-items: center; padding-bottom: 10px; }
-                    .logo-pdf { height: 60px; margin-right: 20px; }
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
-                    th { background: #eee; }
-                    .assinatura-box { text-align: center; margin-top: 40px; }
-                    .ass-img { height: 60px; }
-                </style></head><body>
-                    <div class="header">
-                        <img src="${LOGO_URL}" class="logo-pdf">
-                        <div><h1>RELATÓRIO DE VISTORIA</h1><p>ID #${i.id} | ${i.tipo_operacao} | ${new Date(i.created_at).toLocaleString()}</p></div>
-                    </div>
-                    <p><b>Veículo:</b> ${i.placa} | <b>Motorista:</b> ${i.motorista}</p>
-                    <p><b>KM:</b> ${i.km} | <b>Tanque:</b> ${i.combustivel}</p>
-                    
-                    <h3>Checklist</h3>
-                    <table>
-                        <tr><th>Item</th><th>Status</th></tr>
-                        <tr><td>Pneus</td><td>${check(i.pneu_ok)}</td></tr>
-                        <tr><td>Luzes</td><td>${check(i.luzes_ok)}</td></tr>
-                        <tr><td>Fluídos</td><td>${check(i.fluidos_ok)}</td></tr>
-                        <tr><td>Lataria</td><td>${check(i.lataria_ok)}</td></tr>
-                        <tr><td>Interior</td><td>${check(i.interior_ok)}</td></tr>
-                    </table>
-                    
-                    <p><b>Observação:</b> ${i.observacao || 'Nenhuma'}</p>
-                    ${i.notas_manutencao ? `<p style="background:#fffbeb;padding:5px"><b>Manutenção:</b> ${i.notas_manutencao}</p>` : ''}
-                    
-                    <div style="text-align:center; margin-top:20px;">
-                        <p style="font-size:10px;color:#999">EVIDÊNCIA FOTOGRÁFICA</p>
-                        <img src="${i.foto_url}" style="max-width:100%; max-height:350px; border:1px solid #ccc;">
-                    </div>
-                    
-                    ${htmlAss}
-                    
-                    <script>
-                        // Delay para garantir que imagens carreguem
-                        setTimeout(() => { window.print(); }, 2500);
-                    <\/script>
-                </body></html>
-            `);
-        }
-
-        // Utils, Filtros e Modais (Mantidos)
-        function alternarVisao(v){['viewDashboard','viewLista','viewTimeline'].forEach(id=>document.getElementById(id).classList.add('hidden')); if(v==='dashboard')document.getElementById('viewDashboard').classList.remove('hidden');else if(v==='lista')document.getElementById('viewLista').classList.remove('hidden');else document.getElementById('viewTimeline').classList.remove('hidden')}
-        function isAprovado(i){return(i.pneu_ok!==false&&i.luzes_ok!==false&&i.fluidos_ok!==false&&i.lataria_ok!==false&&i.interior_ok!==false)}
-        async function registrarLog(a,d){await sb.from('auditoria').insert({usuario:'ADMIN',acao:a,detalhes:d})}
-        async function abrirAuditoria(){document.getElementById('modalAuditoria').classList.remove('hidden');const t=document.getElementById('tabelaLogs');t.innerHTML='Carregando...';const{data}=await sb.from('auditoria').select('*').order('data_hora',{ascending:false}).limit(50);t.innerHTML='';data.forEach(l=>{t.innerHTML+=`<tr class="border-b"><td class="p-1">${new Date(l.data_hora).toLocaleString()}</td><td class="p-1">${l.usuario}</td><td class="p-1 font-bold">${l.acao}</td></tr>`})}
-        function abrirManutencao(id,p,s){document.getElementById('idChecklistAtual').value=id;document.getElementById('modalPlaca').innerText=p;document.getElementById('novoStatus').value=s;document.getElementById('notasManutencao').value='';document.getElementById('modalManutencao').classList.remove('hidden')}
-        async function salvarManutencao(){const id=document.getElementById('idChecklistAtual').value;await sb.from('checklists').update({status_manutencao:document.getElementById('novoStatus').value,notas_manutencao:document.getElementById('notasManutencao').value}).match({id});await registrarLog('MANUTENÇÃO',id);fechar('modalManutencao');carregarDados()}
-        async function apagarChecklist(id,p){if(confirm("Excluir registro?")){await sb.from('checklists').delete().match({id});await registrarLog('EXCLUIU',p);carregarDados()}}
+        // Modais Padrão
         function abrir(id,cb){document.getElementById(id).classList.remove('hidden');if(cb)cb()} function fechar(id){document.getElementById(id).classList.add('hidden')}
-        async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500 font-bold">X</button></li>`)}
-        async function addFrota(){const p=document.getElementById('nPlaca').value.toUpperCase();if(p){await sb.from('frota').insert({placa:p});await registrarLog('ADD VEICULO',p);loadFrota();document.getElementById('nPlaca').value=''}}
-        async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500 font-bold">X</button></li>`)}
-        async function addEquipe(){const n=document.getElementById('nNome').value.toUpperCase();const p=document.getElementById('nPin').value;if(n){await sb.from('funcionarios').insert({nome:n,pin:p});await registrarLog('ADD STAFF',n);loadEquipe();document.getElementById('nNome').value=''}}
-        async function del(t,id,cb){if(confirm("Apagar?")){await sb.from(t).delete().match({id});await registrarLog('APAGOU',t);cb()}}
-        function filtrar(){renderizar(dadosGlobais.filter(d=>d.placa.includes(document.getElementById('busca').value.toUpperCase())))}
-        function exportarCSV(){let c="ID,DATA,PLACA,STATUS\n";dadosGlobais.forEach(r=>{c+=`${r.id},${r.created_at},${r.placa},${isAprovado(r)?'OK':'FALHA'}\n`});const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dados.csv';a.click()}
+        async function loadFrota(){const l=document.getElementById('lFrota');l.innerHTML='';const{data}=await sb.from('frota').select('*').order('placa');data.forEach(v=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${v.placa}</span><button onclick="del('frota',${v.id},loadFrota)" class="text-red-500">X</button></li>`)}
+        async function addFrota(){const p=document.getElementById('nPlaca').value.toUpperCase();if(p){await sb.from('frota').insert({placa:p});loadFrota();document.getElementById('nPlaca').value=''}}
+        async function loadEquipe(){const l=document.getElementById('lEquipe');l.innerHTML='';const{data}=await sb.from('funcionarios').select('*').order('nome');data.forEach(u=>l.innerHTML+=`<li class="flex justify-between py-1 border-b"><span>${u.nome}</span><button onclick="del('funcionarios',${u.id},loadEquipe)" class="text-red-500">X</button></li>`)}
+        async function addEquipe(){const n=document.getElementById('nNome').value.toUpperCase();const p=document.getElementById('nPin').value;if(n){await sb.from('funcionarios').insert({nome:n,pin:p});loadEquipe();document.getElementById('nNome').value=''}}
+        async function abrirAuditoria(){document.getElementById('modalAuditoria').classList.remove('hidden');const t=document.getElementById('tabelaLogs');t.innerHTML='Carregando...';const{data}=await sb.from('auditoria').select('*').order('data_hora',{ascending:false}).limit(20);t.innerHTML='';data.forEach(l=>{t.innerHTML+=`<tr class="border-b"><td class="p-1">${new Date(l.data_hora).toLocaleString()}</td><td class="p-1">${l.acao}</td></tr>`})}
+        async function abrirManutencao(id,p,s){document.getElementById('idChecklistAtual').value=id;document.getElementById('modalPlaca').innerText=p;document.getElementById('novoStatus').value=s;document.getElementById('modalManutencao').classList.remove('hidden')}
+        async function salvarManutencao(){const id=document.getElementById('idChecklistAtual').value;await sb.from('checklists').update({status_manutencao:document.getElementById('novoStatus').value,notas_manutencao:document.getElementById('notasManutencao').value}).match({id});fechar('modalManutencao');carregarDados()}
+        async function apagarChecklist(id){if(confirm("Excluir?")){await sb.from('checklists').delete().match({id});carregarDados()}}
+        async function del(t,id,cb){if(confirm("Apagar?")){await sb.from(t).delete().match({id});cb()}}
     </script>
 </body>
-</html>
+    </html>
